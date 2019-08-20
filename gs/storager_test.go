@@ -1,0 +1,35 @@
+package gs
+
+import (
+	"context"
+	"fmt"
+	"github.com/viant/afs/option"
+	"os"
+	"path"
+	"time"
+)
+
+//TestProject test project
+var TestProject = "viant-e2e"
+
+//TestBucket test bucket
+var TestBucket = fmt.Sprintf("%v-test%v", TestProject, time.Now().Format("2006-01-02"))
+
+//NewTestJwtConfig returns new jwt config
+func NewTestJwtConfig() (*JwtConfig, error) {
+	secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
+	return NewJwtConfig(option.NewLocation(secretPath))
+}
+
+//NewTestStorager returns a test instance
+func NewTestStorager(ctx context.Context, bucket string) (*storager, error) {
+	if bucket == "" {
+		bucket = TestBucket
+	}
+	jwtConfig, err := NewTestJwtConfig()
+	if err != nil {
+		return nil, err
+	}
+	return newStorager(ctx, fmt.Sprintf("gs://%s", bucket), jwtConfig)
+
+}
