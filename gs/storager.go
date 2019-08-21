@@ -35,7 +35,8 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	client := &client{
 		ctx: ctx,
 	}
-	if len(options) == 0 {
+
+	if len(gcpOptions) == 0 {
 		client, err = newClient(ctx, options)
 		if err != nil {
 			return nil, err

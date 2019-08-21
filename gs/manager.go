@@ -13,10 +13,7 @@ type manager struct {
 }
 
 func (m *manager) provider(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
-	if len(options) == 0 {
-		options = make([]storage.Option, 0)
-	}
-	options = append(options, m.Options)
+	options = m.Options(options)
 	return newStorager(ctx, baseURL, options...)
 }
 
@@ -38,7 +35,7 @@ func (s *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}
-	baseMgr := base.New(result, Scheme, result.provider, options...)
+	baseMgr := base.New(result, Scheme, result.provider, options)
 	result.Manager = baseMgr
 	return result
 }

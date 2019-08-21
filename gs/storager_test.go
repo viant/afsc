@@ -15,7 +15,7 @@ var TestProject = "viant-e2e"
 //TestBucket test bucket
 var TestBucket = fmt.Sprintf("%v-test%v", TestProject, time.Now().Format("2006-01-02"))
 
-//NewTestJwtConfig returns new jwt config
+//NewTestJwtConfig returns a jwt config
 func NewTestJwtConfig() (*JwtConfig, error) {
 	secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
 	return NewJwtConfig(option.NewLocation(secretPath))

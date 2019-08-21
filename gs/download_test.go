@@ -39,7 +39,7 @@ func TestStorager_Download(t *testing.T) {
 		},
 	}
 	mgr := New(jwtConfig)
-	defer mgr.Delete(ctx, "/")
+	defer mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
 	for _, useCase := range useCases {
 
 		err = asset.Create(mgr, useCase.URL, useCase.assets)

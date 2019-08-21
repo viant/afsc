@@ -46,7 +46,7 @@ func TestStorager_Move(t *testing.T) {
 		},
 	}
 	mgr := newManager(jwtConfig)
-	defer mgr.Delete(ctx, "/")
+	defer mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
 	for _, useCase := range useCases {
 		err = asset.Create(mgr, useCase.URL, useCase.assets)
 		assert.Nil(t, err, useCase.description)

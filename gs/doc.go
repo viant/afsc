@@ -1,2 +1,2 @@
-//Package gs define google storage for abstract file storage API
+//Package gs implements abstract file storage API with Google Storage
 package gs

@@ -41,11 +41,8 @@ func (s *storager) list(ctx context.Context, location string, result *[]os.FileI
 	if err != nil {
 		return err
 	}
-	if len(*result) == 1 {
-		_, locationName := path.Split(location)
-		if locationName == (*result)[0].Name() {
-			err = s.listPage(ctx, call, location+"/", result, page)
-		}
+	if len(*result) == 1 && (*result)[0].IsDir() {
+		err = s.listPage(ctx, call, location+"/", result, page)
 	}
 	return err
 }
@@ -57,7 +54,7 @@ func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall,
 		call.Delimiter("/")
 		call.Context(ctx)
 
-		if err = s.listObjects(ctx, call, result, page); err != nil {
+		if err = s.listObjects(ctx, location, call, result, page); err != nil {
 			if err == io.EOF {
 				err = nil
 			}
@@ -67,7 +64,7 @@ func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall,
 	return err
 }
 
-func (s *storager) addFolders(ctx context.Context, objects *gstorage.Objects, infoList *[]os.FileInfo, page *option.Page) error {
+func (s *storager) addFolders(ctx context.Context, location string, objects *gstorage.Objects, infoList *[]os.FileInfo, page *option.Page) error {
 	if folders := objects.Prefixes; len(folders) > 0 {
 		for _, folder := range folders {
 			page.Increment()
@@ -75,7 +72,6 @@ func (s *storager) addFolders(ctx context.Context, objects *gstorage.Objects, in
 				continue
 			}
 			folder = strings.Trim(folder, "/")
-
 			_, name := path.Split(folder)
 			info := file.NewInfo(name, int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
 			*infoList = append(*infoList, info)
@@ -87,7 +83,7 @@ func (s *storager) addFolders(ctx context.Context, objects *gstorage.Objects, in
 	return nil
 }
 
-func (s *storager) addFiles(ctx context.Context, objects *gstorage.Objects, infoList *[]os.FileInfo, page *option.Page) error {
+func (s *storager) addFiles(ctx context.Context, location string, objects *gstorage.Objects, infoList *[]os.FileInfo, page *option.Page) error {
 	if items := objects.Items; len(items) > 0 {
 		for i, object := range items {
 			page.Increment()
@@ -115,15 +111,15 @@ func (s *storager) addFiles(ctx context.Context, objects *gstorage.Objects, info
 	return nil
 }
 
-func (s *storager) listObjects(ctx context.Context, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page) error {
+func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page) error {
 	objects, err := call.Do()
 	if err != nil {
 		return err
 	}
-	if err = s.addFolders(ctx, objects, infoList, page); err != nil {
+	if err = s.addFolders(ctx, location, objects, infoList, page); err != nil {
 		return err
 	}
-	if err = s.addFiles(ctx, objects, infoList, page); err != nil {
+	if err = s.addFiles(ctx, location, objects, infoList, page); err != nil {
 		return err
 	}
 	call.PageToken(objects.NextPageToken)

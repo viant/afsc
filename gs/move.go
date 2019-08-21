@@ -20,14 +20,14 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	if len(infoList) == 0 {
 		return fmt.Errorf("%v: not found", sourcePath)
 	}
-	if infoList[0].IsDir() {
-		for i := 1; i < len(infoList); i++ {
-			name := infoList[i].Name()
-			if err = s.Move(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
-				break
-			}
+	for i := 1; i < len(infoList); i++ {
+		name := infoList[i].Name()
+		if err = s.Move(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
+			break
 		}
-		return err
+	}
+	if infoList[0].IsDir() {
+		return nil
 	}
 	info, ok := infoList[0].(*file.Info)
 	if !ok {

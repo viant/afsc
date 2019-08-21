@@ -3,29 +3,22 @@ package gs
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"google.golang.org/api/googleapi"
 	gstorage "google.golang.org/api/storage/v1"
-	"hash/crc32"
 	"net/http"
 	"os"
 	"strings"
 )
 
 func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, md5Hash *option.Md5, content []byte) {
+	if crcHash.Hash > 0 {
+		return
+	}
 	if len(md5Hash.Hash) == 0 {
-		hash := md5.New()
-		_, _ = hash.Write(content)
-		md5Hash.Hash = hash.Sum(nil)
+		md5Hash.Hash = option.NewMd5(content).Hash
 	}
-	if crcHash.Hash == 0 {
-		crc32Hash := crc32.New(crc32.MakeTable(crc32.Castagnoli))
-		_, _ = crc32Hash.Write(content)
-		crcHash.Hash = crc32Hash.Sum32()
-	}
-
 }
 
 //Upload uploads content

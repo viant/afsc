@@ -57,7 +57,7 @@ Otherwise use case use [GOOGLE_APPLICATION_CREDENTIALS](https://cloud.google.com
 
 - **JSON Web Token (JWT)**
 
-To use JWT auth, provide a type that implements the following interface, you can also use [gcpgs.NewJwtConfig](jwt.go)  
+To use JWT auth, provide a type that implements the following interface, you can also use [gs.NewJwtConfig](jwt.go)  
 
 ```go
 type JWTProvider interface {
@@ -70,7 +70,7 @@ type JWTProvider interface {
 _Example:_
 ```go
     secretPath := path.Join(os.Getenv("HOME"), ".secret", TestCredenitlas)
-	jwtConfig, err := NewJwtConfig(option.NewLocation(secretPath))
+	jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
 	if err != nil {
 		log.Fatal(err)
 	}
