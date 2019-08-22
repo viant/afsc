@@ -32,7 +32,7 @@ import (
 	"log"
 )
 
-func ExampleNew() {
+func main() {
 	service := afs.New()
 	ctx := context.Background()
 	objects, err := service.List(ctx, "gs://myBucket/folder")
@@ -67,7 +67,7 @@ func ExampleNew() {
 - Uploading/downloading with secure key
 
 ```go
-func ExampleNewAES256Key() {
+
 	customKey := s3.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
 	ctx := context.Background()
 	service := afs.New()
@@ -81,7 +81,7 @@ func ExampleNewAES256Key() {
 		log.Fatal(err)
 	}
 	fmt.Printf("data: %s\n", data)
-}
+
 ```
 
 ## Connectors 

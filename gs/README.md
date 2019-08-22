@@ -13,7 +13,7 @@ import (
 	"log"
 )
 
-func ExampleNew() {
+func main() {
 	service := afs.New()
 	ctx := context.Background()
 	objects, err := service.List(ctx, "gs://myBucket/folder")
