@@ -50,7 +50,7 @@ func (c *JwtConfig) JWTConfig(scopes ...string) (config *jwt.Config, projectID s
 	return result, c.ProjectID, nil
 }
 
-//NewSecretsFromLocation returns new secrets from location
+//NewJwtConfig returns new secrets from location
 func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 	location := &option.Location{}
 	_, _ = option.Assign(options, &location)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 	"os"
 	"path"
 	"time"
@@ -22,7 +23,7 @@ func NewTestJwtConfig() (*JwtConfig, error) {
 }
 
 //NewTestStorager returns a test instance
-func NewTestStorager(ctx context.Context, bucket string) (*storager, error) {
+func NewTestStorager(ctx context.Context, bucket string) (storage.Storager, error) {
 	if bucket == "" {
 		bucket = TestBucket
 	}

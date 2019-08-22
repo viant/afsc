@@ -21,6 +21,5 @@ func (s *storager) createBucket(ctx context.Context) error {
 	_, err := s.S3.CreateBucketWithContext(ctx, &s3.CreateBucketInput{
 		Bucket: &s.bucket,
 	})
-
 	return err
 }

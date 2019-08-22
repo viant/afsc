@@ -2,7 +2,7 @@ package s3
 
 import "sync"
 
-//ByteWriterAt  represents a bytes writer at
+//Writer  represents a bytes writer at
 type Writer struct {
 	mutex    *sync.Mutex
 	Buffer   []byte
@@ -39,7 +39,7 @@ func (w *Writer) WriteAt(p []byte, offset int64) (n int, err error) {
 	}
 }
 
-//Writer returns a writer
+//NewWriter returns a writer
 func NewWriter() *Writer {
 	return &Writer{
 		mutex:  &sync.Mutex{},

@@ -117,7 +117,7 @@ _Example:_
 
 ```go
 
-    customKey := gs.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
+    customKey := gs.NewCumstomKey([]byte("secret-key-that-is-32-bytes-long"))
 	ctx := context.Background()
 	service := afs.New()
 	err := service.Upload(ctx, "gs://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)

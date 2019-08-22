@@ -52,11 +52,11 @@ func TestAES256Key_SetHeader(t *testing.T) {
 	}()
 	for _, useCase := range useCases {
 
-		var key *AES256Key
+		var key *CustomKey
 		if useCase.key != "" {
-			key = NewAES256Key([]byte(useCase.key))
+			key = NewCustomKey([]byte(useCase.key))
 		} else {
-			key, err = NewBase64AES256Key(useCase.base64Key)
+			key, err = NewBase64CustomKey(useCase.base64Key)
 			assert.Nil(t, err, useCase.description)
 		}
 

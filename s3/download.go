@@ -22,7 +22,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	} else {
 		sess = session.New(s.config)
 	}
-	key := &AES256Key{}
+	key := &CustomKey{}
 	_, _ = option.Assign(options, &key)
 	downloader := s3manager.NewDownloader(sess)
 	writer := NewWriter()
@@ -34,7 +34,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	if len(key.Key) > 0 {
 		input.SetSSECustomerAlgorithm(customEncryptionAlgorithm)
 		input.SetSSECustomerKey(string(key.Key))
-		input.SetSSECustomerKeyMD5(key.Base64KeyHash)
+		input.SetSSECustomerKeyMD5(key.Base64KeyMd5Hash)
 	}
 
 	_, err := downloader.DownloadWithContext(ctx, writer, input)

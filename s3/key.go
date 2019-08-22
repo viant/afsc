@@ -5,32 +5,32 @@ import (
 	"encoding/base64"
 )
 
-//AES256Key represents AES-256 key
-type AES256Key struct {
-	Key           []byte
-	Base64KeyHash string
+//CustomKey represents AES-256 key
+type CustomKey struct {
+	Key              []byte
+	Base64KeyMd5Hash string
 }
 
-//NewKey returns new key
-func NewAES256Key(key []byte) *AES256Key {
+//NewCustomKey returns new key
+func NewCustomKey(key []byte) *CustomKey {
 	keyHash := md5.New()
 	keyHash.Write(key)
-	return &AES256Key{
-		Key:           key,
-		Base64KeyHash: base64.StdEncoding.EncodeToString(keyHash.Sum(nil)),
+	return &CustomKey{
+		Key:              key,
+		Base64KeyMd5Hash: base64.StdEncoding.EncodeToString(keyHash.Sum(nil)),
 	}
 }
 
-//NewBase64AES256Key create a AES256Key from base64 encoded key
-func NewBase64AES256Key(base64Key string) (*AES256Key, error) {
+//NewBase64CustomKey create a CustomKey from base64 encoded key
+func NewBase64CustomKey(base64Key string) (*CustomKey, error) {
 	key, err := base64.StdEncoding.DecodeString(base64Key)
 	if err != nil {
 		return nil, err
 	}
 	keyHash := md5.New()
 	keyHash.Write(key)
-	return &AES256Key{
-		Key:           key,
-		Base64KeyHash: base64.StdEncoding.EncodeToString(keyHash.Sum(nil)),
+	return &CustomKey{
+		Key:              key,
+		Base64KeyMd5Hash: base64.StdEncoding.EncodeToString(keyHash.Sum(nil)),
 	}, nil
 }
