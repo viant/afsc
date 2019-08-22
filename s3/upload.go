@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-
 	"os"
 	"strings"
 )
@@ -36,7 +35,8 @@ func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5,
 
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options []storage.Option) error {
 	md5Hash := &option.Md5{}
-	_, _ = option.Assign(options, &md5Hash)
+	key := &AES256Key{}
+	_, _ = option.Assign(options, &md5Hash, &key)
 	input := &s3.PutObjectInput{
 		Bucket:   &s.bucket,
 		Key:      aws.String(destination),
@@ -45,6 +45,11 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 	s.updateChecksum(input, md5Hash, content)
 	input.Metadata[contentMD5MetaKey] = input.ContentMD5
+	if len(key.Key) > 0 {
+		input.SetSSECustomerKey(string(key.Key))
+		input.SetSSECustomerKeyMD5(key.Base64KeyHash)
+		input.SetSSECustomerAlgorithm(customEncryptionAlgorithm)
+	}
 	_, err := s.PutObjectWithContext(ctx, input)
 	return err
 }

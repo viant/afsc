@@ -28,21 +28,32 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 		Bucket: s.bucket,
 		Name:   destination,
 	}
+
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
-	_, _ = option.Assign(options, &md5Hash, &crcHash)
+	key := &AES256Key{}
+	_, _ = option.Assign(options, &md5Hash, &crcHash, &key)
+
 	s.updateChecksum(object, crcHash, md5Hash, content)
 	call := s.Objects.Insert(s.bucket, object)
+
 	call.Context(ctx)
+
+	if len(key.Key) > 0 {
+		if err := key.SetHeader(call.Header()); err != nil {
+			return err
+		}
+	}
 	call.Media(bytes.NewReader(content))
-	_, err := call.Do()
+	object, err := call.Do()
 	if apiError, ok := err.(*googleapi.Error); ok {
 		if apiError.Code == http.StatusNotFound {
 			if err = s.createBucket(ctx); err != nil {
 				return err
 			}
-			_, err = call.Do()
+			object, err = call.Do()
 		}
 	}
+
 	return err
 }

@@ -13,9 +13,7 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 - [License](#license)
 - [Credits and Acknowledgements](#credits-and-acknowledgements)
 
-
-This project provides various implementation for [abstract file storage](https://github.com/viant/afs)
-
+This project provides various implementation for [Abstract File Storage](https://github.com/viant/afs)
 
 ## Usage
 
@@ -61,16 +59,33 @@ func ExampleNew() {
 	}
 }
 
+```
 
+- Uploading/downloading with secure key
+
+```go
+func ExampleNewAES256Key() {
+	customKey := s3.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
+	ctx := context.Background()
+	service := afs.New()
+	err := service.Upload(ctx, "s3://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("data: %s\n", data)
+}
 ```
 
 
 ## GoCover
 
 [![GoCover](https://gocover.io/github.com/viant/afsc)](https://gocover.io/github.com/viant/afsc)
-	
-	
-<a name="License"></a>
+
 ## License
 
 The source code is made available under the terms of the Apache License, Version 2, as stated in the file `LICENSE`.

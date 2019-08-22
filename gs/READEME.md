@@ -113,3 +113,23 @@ _Example:_
 
 ```
 
+- Custom key encryption
+
+```go
+
+    customKey := gs.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
+	ctx := context.Background()
+	service := afs.New()
+	err := service.Upload(ctx, "gs://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	reader, err := service.DownloadWithURL(ctx, "gs://mybucket/folder/secret1.txt", customKey)
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("data: %s\n", data)
+
+
+```

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/viant/afs"
 	_ "github.com/viant/afsc/gs"
+	_ "github.com/viant/afsc/s3"
+
 	"io/ioutil"
 	"log"
 )
@@ -32,7 +34,6 @@ func ExampleNew() {
 		}
 		fmt.Printf("%s\n", data)
 	}
-
 	err = service.Copy(ctx, "gs://myBucket/folder", "s3://myBucket/cloned")
 	if err != nil {
 		log.Fatal(err)

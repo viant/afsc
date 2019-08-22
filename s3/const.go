@@ -1,5 +1,6 @@
 package s3
 
 const (
-	contentMD5MetaKey = "ContentMD5"
+	customEncryptionAlgorithm = "AES256"
+	contentMD5MetaKey         = "ContentMD5"
 )
