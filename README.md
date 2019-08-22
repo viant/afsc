@@ -9,7 +9,7 @@ This library is compatible with Go 1.11+
 Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes.
 
 - [Usage](#usage)
-- [Connectors]
+- Connectors
     * [GCP - Google Storage](gs)
     * [AWS - S3](s3)
 - [GoCover](#gocover)
