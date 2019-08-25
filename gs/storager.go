@@ -30,7 +30,7 @@ func (s *storager) Bucket(ctx context.Context) (*gstorage.Bucket, error) {
 func newStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
 	var gcpOptions ClientOptions
 	project := &Project{}
-	_, _ = option.Assign(options, &gcpOptions, &project)
+	option.Assign(options, &gcpOptions, &project)
 	var err error
 	client := &client{
 		ctx: ctx,

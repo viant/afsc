@@ -22,7 +22,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 		result = append(result, info)
 	}
 	page := &option.Page{}
-	_, _ = option.Assign(options, &page)
+	option.Assign(options, &page)
 	err := s.list(ctx, location, &result, page)
 	if err != nil {
 		return nil, err

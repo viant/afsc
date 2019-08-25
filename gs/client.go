@@ -30,7 +30,7 @@ func defaultHTTPClient(ctx context.Context, scopes Scopes) (*http.Client, error)
 func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 	var jwTProvider JWTProvider
 	var scopes = make(Scopes, 0)
-	_, _ = option.Assign(options, &jwTProvider, &scopes)
+	option.Assign(options, &jwTProvider, &scopes)
 	if len(scopes) == 0 {
 		scopes = NewScopes(gstorage.CloudPlatformScope, gstorage.DevstorageFullControlScope)
 	}

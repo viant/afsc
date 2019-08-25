@@ -36,7 +36,7 @@ func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5,
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, content []byte, options []storage.Option) error {
 	md5Hash := &option.Md5{}
 	key := &CustomKey{}
-	_, _ = option.Assign(options, &md5Hash, &key)
+	option.Assign(options, &md5Hash, &key)
 	input := &s3.PutObjectInput{
 		Bucket:   &s.bucket,
 		Key:      aws.String(destination),

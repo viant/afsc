@@ -37,7 +37,7 @@ func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
 //NewAuthConfig returns new auth config from location
 func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 	location := &option.Location{}
-	_, _ = option.Assign(options, &location)
+	option.Assign(options, &location)
 	if location.Path == "" {
 		return nil, errors.New("location was empty")
 	}

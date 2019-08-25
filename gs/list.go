@@ -19,7 +19,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 
 	var result = make([]os.FileInfo, 0)
 	page := &option.Page{}
-	_, _ = option.Assign(options, &page)
+	option.Assign(options, &page)
 	err := s.list(ctx, location, &result, page)
 	return result, err
 }
