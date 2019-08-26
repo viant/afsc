@@ -8,7 +8,6 @@ import (
 	"github.com/viant/afs/storage"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
-	"io"
 	"io/ioutil"
 	"os"
 )
@@ -62,7 +61,6 @@ func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 	if location.Path == "" {
 		return nil, errors.New("location was empty")
 	}
-	var reader io.Reader
 	if location.Path != "" {
 		file, err := os.Open(location.Path)
 		if err != nil {
