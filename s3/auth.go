@@ -53,7 +53,7 @@ func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 			return nil, errors.Wrap(err, "failed to open auth config")
 		}
 		defer func() { _ = file.Close() }()
-		if JSONPayload, err = ioutil.ReadAll(reader);err != nil {
+		if JSONPayload, err = ioutil.ReadAll(file);err != nil {
 			return nil, err
 		}
 
