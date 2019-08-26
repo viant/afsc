@@ -1,12 +1,15 @@
 package gs
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
+	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -53,19 +56,26 @@ func (c *JwtConfig) JWTConfig(scopes ...string) (config *jwt.Config, projectID s
 //NewJwtConfig returns new secrets from location
 func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 	location := &option.Location{}
+	var JSONPayload = make([]byte, 0)
+	option.Assign(options, &location, &JSONPayload)
 	option.Assign(options, &location)
 	if location.Path == "" {
 		return nil, errors.New("location was empty")
 	}
+	var reader io.Reader
+	if location.Path != "" {
+		file, err := os.Open(location.Path)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open auth config")
+		}
+		defer func() { _ = file.Close() }()
+		if JSONPayload, err = ioutil.ReadAll(reader);err != nil {
+			return nil, err
+		}
 
-	file, err := os.Open(location.Path)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open jwt config")
 	}
-	defer func() { _ = file.Close() }()
 	config := &JwtConfig{}
-	err = json.NewDecoder(file).Decode(config)
+	err := json.NewDecoder(bytes.NewReader(JSONPayload)).Decode(config)
 	return config, err
 
 }

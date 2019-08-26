@@ -1,12 +1,15 @@
 package s3
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
+	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -37,18 +40,26 @@ func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
 //NewAuthConfig returns new auth config from location
 func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 	location := &option.Location{}
-	option.Assign(options, &location)
-	if location.Path == "" {
+	var JSONPayload = make([]byte, 0)
+	option.Assign(options, &location, &JSONPayload)
+	if location.Path == "" && len(JSONPayload) == 0 {
 		return nil, errors.New("location was empty")
 	}
 
-	file, err := os.Open(location.Path)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open auth config")
+	var reader io.Reader
+	if location.Path != "" {
+		file, err := os.Open(location.Path)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open auth config")
+		}
+		defer func() { _ = file.Close() }()
+		if JSONPayload, err = ioutil.ReadAll(reader);err != nil {
+			return nil, err
+		}
+
 	}
-	defer func() { _ = file.Close() }()
 	config := &AuthConfig{}
-	err = json.NewDecoder(file).Decode(config)
+	err := json.NewDecoder(bytes.NewReader(JSONPayload)).Decode(config)
 	return config, err
 
 }
