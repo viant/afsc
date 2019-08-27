@@ -134,10 +134,13 @@ func ExampleNewClientOptions() {
 }
 
 func ExampleNewCustomKey() {
-	customKey := gs.NewCustomKey([]byte("secret-key-that-is-32-bytes-long"))
+	customKey, err := option.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx := context.Background()
 	service := afs.New()
-	err := service.Upload(ctx, "gs://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
+	err = service.Upload(ctx, "gs://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -18,10 +18,10 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	call.Context(ctx)
 	crc := &option.Crc{}
 	md5 := &option.Md5{}
-	key := &CustomKey{}
+	key := &option.AES256Key{}
 	post, _ := option.Assign(options, &md5, &crc, &key)
 	if len(key.Key) != 0 {
-		if err := key.SetHeader(call.Header()); err != nil {
+		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
 		}
 	}
@@ -37,7 +37,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 		}
 	}
 	if len(key.Key) != 0 {
-		if err := key.SetHeader(call.Header()); err != nil {
+		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
 		}
 	}

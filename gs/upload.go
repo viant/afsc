@@ -31,7 +31,7 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
-	key := &CustomKey{}
+	key := &option.AES256Key{}
 	option.Assign(options, &md5Hash, &crcHash, &key)
 
 	s.updateChecksum(object, crcHash, md5Hash, content)
@@ -40,7 +40,7 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	call.Context(ctx)
 
 	if len(key.Key) > 0 {
-		if err := key.SetHeader(call.Header()); err != nil {
+		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return err
 		}
 	}

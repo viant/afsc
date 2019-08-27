@@ -92,18 +92,20 @@ md5 is computed for supplied content.
 - Custom key encryption
 
 ```go
-    customKey := s3.NewCustomKey([]byte("secret-key-that-is-32-bytes-long"))
-	ctx := context.Background()
-	service := afs.New()
-	err := service.Upload(ctx, "s3://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
-	data, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("data: %s\n", data)
-
+   customKey, err := option.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
+   	if err != nil {
+   		log.Fatal(err)
+   	}
+   	ctx := context.Background()
+   	service := afs.New()
+   	err = service.Upload(ctx, "s3://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
+   	if err != nil {
+   		log.Fatal(err)
+   	}
+   	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
+   	data, err := ioutil.ReadAll(reader)
+   	if err != nil {
+   		log.Fatal(err)
+   	}
+   	fmt.Printf("data: %s\n", data)
 ```

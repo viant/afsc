@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/url"
 	"io/ioutil"
 	"strings"
@@ -52,11 +53,12 @@ func TestAES256Key_SetHeader(t *testing.T) {
 	}()
 	for _, useCase := range useCases {
 
-		var key *CustomKey
+		var key *option.AES256Key
 		if useCase.key != "" {
-			key = NewCustomKey([]byte(useCase.key))
+			key, err = option.NewAES256Key([]byte(useCase.key))
+			assert.Nil(t, err, useCase.description)
 		} else {
-			key, err = NewBase64CustomKey(useCase.base64Key)
+			key, err = option.NewBase64AES256Key(useCase.base64Key)
 			assert.Nil(t, err, useCase.description)
 		}
 

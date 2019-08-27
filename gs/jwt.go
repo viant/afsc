@@ -67,7 +67,7 @@ func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 			return nil, errors.Wrap(err, "failed to open auth config")
 		}
 		defer func() { _ = file.Close() }()
-		if JSONPayload, err = ioutil.ReadAll(file);err != nil {
+		if JSONPayload, err = ioutil.ReadAll(file); err != nil {
 			return nil, err
 		}
 

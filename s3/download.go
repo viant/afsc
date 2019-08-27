@@ -22,7 +22,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	} else {
 		sess = session.New(s.config)
 	}
-	key := &CustomKey{}
+	key := &option.AES256Key{}
 	option.Assign(options, &key)
 	downloader := s3manager.NewDownloader(sess)
 	writer := NewWriter()
