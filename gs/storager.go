@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -17,7 +18,7 @@ type storager struct {
 
 //Close closes storager
 func (s *storager) Close() error {
-	s.client.CloseIdleConnections()
+	http.CloseIdleConnections(s.client)
 	return nil
 }
 
