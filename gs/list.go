@@ -72,7 +72,6 @@ func (s *storager) addFolders(ctx context.Context, parent string, objects *gstor
 			folder = strings.Trim(folder, "/")
 			_, name := path.Split(folder)
 			info := file.NewInfo(name, int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
-			fmt.Printf("matched: %v %v: %v\n", parent, info.Name(), matcher(parent, info))
 			if !matcher(parent, info) {
 				continue
 			}
