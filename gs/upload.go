@@ -33,8 +33,8 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
 	option.Assign(options, &md5Hash, &crcHash, &key)
-
 	s.updateChecksum(object, crcHash, md5Hash, content)
+
 	call := s.Objects.Insert(s.bucket, object)
 
 	call.Context(ctx)
