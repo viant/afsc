@@ -4,3 +4,8 @@ package s3
 type Region struct {
 	Name string
 }
+
+//NewRegion creates a region for specified name
+func NewRegion(name string) *Region{
+	return &Region{Name:name}
+}
