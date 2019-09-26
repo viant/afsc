@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"os"
@@ -18,10 +19,11 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(err.Error(), "NoSuchBucket") {
-		if err = s.createBucket(ctx); err == nil {
-			return s.upload(ctx, destination, mode, content, options)
+	if strings.Contains(err.Error(), noSuchBucketMessage) {
+		if err = s.createBucket(ctx); err != nil {
+			return err
 		}
+		return s.upload(ctx, destination, mode, content, options)
 	}
 	return err
 }
@@ -50,6 +52,10 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		input.SetSSECustomerKeyMD5(key.Base64KeyMd5Hash)
 		input.SetSSECustomerAlgorithm(customEncryptionAlgorithm)
 	}
+
 	_, err := s.PutObjectWithContext(ctx, input)
+	if err != nil {
+		return errors.Wrapf(err, "failed to upload: s3://%v/%v", s.bucket, destination)
+	}
 	return err
 }

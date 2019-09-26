@@ -35,34 +35,34 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 
 	if parent == "" {
 		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
-		*result = append(*result, info)
+		if matcher("", info) {
+			*result = append(*result, info)
+		}
 	}
 
-	err = s.listPage(ctx, call, parent, result, page, matcher)
+	files, folders, err := s.listPage(ctx, call, parent, result, page, matcher)
 	if err != nil {
 		return err
 	}
-	if len(*result) == 0 || (len(*result) == 1 && (*result)[0].IsDir()) {
-		err = s.listPage(ctx, call, parent+"/", result, page, matcher)
+	if folders == 1 && files == 0 {
+		_, _, err = s.listPage(ctx, call, parent+"/", result, page, matcher)
 	}
 	return err
 }
 
-func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall, location string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
-	var err error
+func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall, location string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) (files, folders int, err error) {
 	for {
 		call.Prefix(location)
 		call.Delimiter("/")
 		call.Context(ctx)
-
-		if err = s.listObjects(ctx, location, call, result, page, matcher); err != nil {
+		if files, folders, err = s.listObjects(ctx, location, call, result, page, matcher); err != nil {
 			if err == io.EOF {
 				err = nil
 			}
 			break
 		}
 	}
-	return err
+	return files, folders, err
 }
 
 func (s *storager) addFolders(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
@@ -90,6 +90,7 @@ func (s *storager) addFolders(ctx context.Context, parent string, objects *gstor
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
 	if items := objects.Items; len(items) > 0 {
 		for i, object := range items {
+
 			modified, err := time.Parse(time.RFC3339, object.Updated)
 			if err != nil {
 				return err
@@ -100,8 +101,11 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 				mode = file.DefaultDirOsMode
 				object.Name = string(object.Name[:len(object.Name)-1])
 			}
+
 			_, name := path.Split(object.Name)
+
 			info := file.NewInfo(name, int64(object.Size), mode, modified, isDir, items[i])
+
 			if !matcher(parent, info) {
 				continue
 			}
@@ -118,20 +122,22 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 	return nil
 }
 
-func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
+func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Matcher) (int, int, error) {
 	objects, err := call.Do()
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 	if err = s.addFolders(ctx, location, objects, infoList, page, matcher); err != nil {
-		return err
+		return 0, 0, err
 	}
 	if err = s.addFiles(ctx, location, objects, infoList, page, matcher); err != nil {
-		return err
+		return 0, 0, err
 	}
 	call.PageToken(objects.NextPageToken)
+	files := len(objects.Items)
+	folders := len(objects.Prefixes)
 	if objects.NextPageToken == "" {
-		return io.EOF
+		return files, folders, io.EOF
 	}
-	return nil
+	return files, folders, nil
 }

@@ -42,7 +42,7 @@ func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 	var JSONPayload = make([]byte, 0)
 	option.Assign(options, &location, &JSONPayload)
 	if location.Path == "" && len(JSONPayload) == 0 {
-		return nil, errors.New("location was empty")
+		return nil, errors.New("auth location was empty")
 	}
 	if location.Path != "" {
 		file, err := os.Open(location.Path)

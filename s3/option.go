@@ -6,6 +6,6 @@ type Region struct {
 }
 
 //NewRegion creates a region for specified name
-func NewRegion(name string) *Region{
-	return &Region{Name:name}
+func NewRegion(name string) *Region {
+	return &Region{Name: name}
 }

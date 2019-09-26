@@ -48,21 +48,23 @@ func TestStorager_Move(t *testing.T) {
 		},
 	}
 	mgr := newManager(authConfig)
-	defer mgr.Delete(ctx, fmt.Sprintf("s3://%v/", TestBucket))
+	defer func() {
+		_ = mgr.Delete(ctx, fmt.Sprintf("s3://%v/", TestBucket))
+	}()
 	for _, useCase := range useCases {
 		err = asset.Create(mgr, useCase.URL, useCase.assets)
 		assert.Nil(t, err, useCase.description)
 		err := mgr.Move(ctx, url.Join(useCase.URL, useCase.source), url.Join(useCase.URL, useCase.dest))
 		assert.Nil(t, err)
-		for _, asset := range useCase.assets {
-			URL := url.Join(useCase.URL, asset.Name)
+		for _, resource := range useCase.assets {
+			URL := url.Join(useCase.URL, resource.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
 			reader, err := mgr.DownloadWithURL(ctx, URL)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
 			data, err := ioutil.ReadAll(reader)
-			assert.EqualValues(t, asset.Data, data, useCase.description+" "+asset.Name)
+			assert.EqualValues(t, resource.Data, data, useCase.description+" "+resource.Name)
 
 		}
 

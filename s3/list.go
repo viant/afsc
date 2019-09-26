@@ -16,21 +16,25 @@ import (
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
-	var result = make([]os.FileInfo, 0)
-	if location == "" {
-		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
-		result = append(result, info)
-	}
 	page := &option.Page{}
 	var matcher option.Matcher
 	option.Assign(options, &page, &matcher)
 	matcher = option.GetMatcher(matcher)
-	err := s.list(ctx, location, &result, page, matcher)
+
+	var result = make([]os.FileInfo, 0)
+	if location == "" {
+		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
+		if matcher("", info) {
+			result = append(result, info)
+		}
+	}
+
+	files, folders, err := s.list(ctx, location, &result, page, matcher)
 	if err != nil {
 		return nil, err
 	}
-	if len(result) == 0 || (len(result) == 1 && result[0].IsDir()) {
-		err = s.list(ctx, location+"/", &result, page, matcher)
+	if folders == 1 && files == 0 {
+		_, _, err = s.list(ctx, location+"/", &result, page, matcher)
 	}
 	return result, err
 }
@@ -75,17 +79,18 @@ func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.
 	}
 }
 
-func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
+func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) (files, folder int, err error) {
 	input := &s3.ListObjectsInput{
 		Bucket:    aws.String(s.bucket),
 		Prefix:    aws.String(parent),
 		Delimiter: aws.String("/"),
 	}
-	return s.ListObjectsPagesWithContext(ctx, input, func(output *s3.ListObjectsOutput, lastPage bool) bool {
-
+	err = s.ListObjectsPagesWithContext(ctx, input, func(output *s3.ListObjectsOutput, lastPage bool) bool {
+		files = len(output.Contents)
+		folder = len(output.CommonPrefixes)
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
 		s.addFiles(parent, result, output.Contents, page, matcher)
 		return page.HasReachedLimit()
 	})
-
+	return files, folder, err
 }

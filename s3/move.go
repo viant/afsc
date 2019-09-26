@@ -26,7 +26,6 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 			break
 		}
 	}
-
 	if infoList[0].IsDir() {
 		return s.Delete(ctx, sourcePath)
 	}

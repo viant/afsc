@@ -39,7 +39,9 @@ func TestStorager_Exists(t *testing.T) {
 	}
 	jsonAuth := option.WithCredentialsJSON(JSON)
 	mgr := New(NewClientOptions(jsonAuth), NewProject(TestProject))
-	defer mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
+	defer func() {
+		_ = mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
+	}()
 
 	for _, useCase := range useCases {
 		err = asset.Create(mgr, useCase.URL, useCase.assets)
@@ -59,9 +61,7 @@ func TestStorager_Exists(t *testing.T) {
 
 			{
 				URL := url.Join(useCase.URL, resource.Name+".not")
-
 				exists, err := checker.Exists(ctx, URL)
-
 				assert.Nil(t, err)
 				assert.False(t, exists, useCase.description)
 			}

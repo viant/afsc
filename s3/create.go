@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/storage"
 	"os"
 	"strings"
@@ -21,5 +22,8 @@ func (s *storager) createBucket(ctx context.Context) error {
 	_, err := s.S3.CreateBucketWithContext(ctx, &s3.CreateBucketInput{
 		Bucket: &s.bucket,
 	})
+	if err != nil {
+		err = errors.Wrapf(err, "failed to create bucket: `%v`", s.bucket)
+	}
 	return err
 }

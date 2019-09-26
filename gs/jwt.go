@@ -58,8 +58,8 @@ func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 	var JSONPayload = make([]byte, 0)
 	option.Assign(options, &location, &JSONPayload)
 	option.Assign(options, &location)
-	if location.Path == "" {
-		return nil, errors.New("location was empty")
+	if location.Path == "" && len(JSONPayload) == 0 {
+		return nil, errors.New("auth location was empty")
 	}
 	if location.Path != "" {
 		file, err := os.Open(location.Path)
@@ -70,10 +70,8 @@ func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 		if JSONPayload, err = ioutil.ReadAll(file); err != nil {
 			return nil, err
 		}
-
 	}
 	config := &JwtConfig{}
 	err := json.NewDecoder(bytes.NewReader(JSONPayload)).Decode(config)
 	return config, err
-
 }

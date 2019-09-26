@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
+	"strings"
 
 	"github.com/viant/afs/storage"
 	"io"
@@ -26,7 +27,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	option.Assign(options, &key)
 	downloader := s3manager.NewDownloader(sess)
 	writer := NewWriter()
-
+	location = strings.Trim(location, "/")
 	input := &s3.GetObjectInput{
 		Bucket: &s.bucket,
 		Key:    &location,
@@ -39,7 +40,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 
 	_, err := downloader.DownloadWithContext(ctx, writer, input)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to download: %v", location)
+		return nil, errors.Wrapf(err, "failed to download: s3:/%v/%v", s.bucket, location)
 	}
 	return ioutil.NopCloser(bytes.NewReader(writer.Buffer)), nil
 }

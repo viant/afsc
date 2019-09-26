@@ -11,7 +11,7 @@ import (
 )
 
 //TestBucket test bucket
-var TestBucket = fmt.Sprintf("viante2etest%v", time.Now().Format("20060102"))
+var TestBucket = fmt.Sprintf("viantv0e2e%v", time.Now().Format("20060102"))
 
 //NewTestAuthConfig returns an auth config
 func NewTestAuthConfig() (*AuthConfig, error) {
