@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -55,10 +56,14 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 		client.projectID = project.ID
 	}
 
+	bucket := url.Host(baseURL)
+	if bucket == "" {
+		return nil, fmt.Errorf("bucket was empty, URL: %v", baseURL)
+	}
 	return &storager{
 		client:  client,
 		Service: service,
-		bucket:  url.Host(baseURL),
+		bucket:  bucket,
 	}, nil
 }
 

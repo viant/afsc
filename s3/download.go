@@ -40,7 +40,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 
 	_, err := downloader.DownloadWithContext(ctx, writer, input)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to download: s3:/%v/%v", s.bucket, location)
+		return nil, errors.Wrapf(err, "failed to download: s3://%v/%v", s.bucket, location)
 	}
 	return ioutil.NopCloser(bytes.NewReader(writer.Buffer)), nil
 }

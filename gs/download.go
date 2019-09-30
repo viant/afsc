@@ -43,7 +43,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	}
 	response, err := call.Download()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to download "+location)
+		return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
 	}
 	if !http.IsStatusOK(response) {
 		return nil, fmt.Errorf("invalid status code: %v", response.StatusCode)
