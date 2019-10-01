@@ -17,10 +17,9 @@ import (
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	page := &option.Page{}
-	var matcher option.Matcher
+	var matcher option.Match
 	option.Assign(options, &page, &matcher)
-	matcher = option.GetMatcher(matcher)
-
+	matcher = option.GetMatchFunc(matcher)
 	var result = make([]os.FileInfo, 0)
 	if location == "" {
 		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
@@ -39,7 +38,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	return result, err
 }
 
-func (s *storager) addFolders(parent string, result *[]os.FileInfo, prefixes []*s3.CommonPrefix, page *option.Page, matcher option.Matcher) {
+func (s *storager) addFolders(parent string, result *[]os.FileInfo, prefixes []*s3.CommonPrefix, page *option.Page, matcher option.Match) {
 	for i := range prefixes {
 		folder := strings.Trim(*prefixes[i].Prefix, "/")
 		_, name := path.Split(folder)
@@ -61,7 +60,7 @@ func (s *storager) addFolders(parent string, result *[]os.FileInfo, prefixes []*
 
 }
 
-func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.Object, page *option.Page, matcher option.Matcher) {
+func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.Object, page *option.Page, matcher option.Match) {
 	for i := range objects {
 		_, name := path.Split(*objects[i].Key)
 		info := file.NewInfo(name, *objects[i].Size, file.DefaultFileOsMode, *objects[i].LastModified, false, objects[i])
@@ -79,7 +78,7 @@ func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.
 	}
 }
 
-func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) (files, folder int, err error) {
+func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) (files, folder int, err error) {
 	input := &s3.ListObjectsInput{
 		Bucket:    aws.String(s.bucket),
 		Prefix:    aws.String(parent),

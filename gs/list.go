@@ -18,15 +18,15 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	location = strings.Trim(location, "/")
 	var result = make([]os.FileInfo, 0)
 	page := &option.Page{}
-	var matcher option.Matcher
+	var matcher option.Match
 	option.Assign(options, &page, &matcher)
-	matcher = option.GetMatcher(matcher)
+	matcher = option.GetMatchFunc(matcher)
 	err := s.list(ctx, location, &result, page, matcher)
 	return result, err
 }
 
 //List list directory, returns a file info
-func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
+func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	var err error
 	call := s.Objects.List(s.bucket)
 	if page.MaxResult() > 0 {
@@ -50,7 +50,7 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 	return err
 }
 
-func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall, location string, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) (files, folders int, err error) {
+func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall, location string, result *[]os.FileInfo, page *option.Page, matcher option.Match) (files, folders int, err error) {
 	for {
 		call.Prefix(location)
 		call.Delimiter("/")
@@ -65,7 +65,7 @@ func (s *storager) listPage(ctx context.Context, call *gstorage.ObjectsListCall,
 	return files, folders, err
 }
 
-func (s *storager) addFolders(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
+func (s *storager) addFolders(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if folders := objects.Prefixes; len(folders) > 0 {
 		for _, folder := range folders {
 			folder = strings.Trim(folder, "/")
@@ -87,7 +87,7 @@ func (s *storager) addFolders(ctx context.Context, parent string, objects *gstor
 	return nil
 }
 
-func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Matcher) error {
+func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if items := objects.Items; len(items) > 0 {
 		for i, object := range items {
 
@@ -122,7 +122,7 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 	return nil
 }
 
-func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Matcher) (int, int, error) {
+func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
 	objects, err := call.Do()
 	if err != nil {
 		return 0, 0, err
