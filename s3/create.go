@@ -15,6 +15,14 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 	if !isDir {
 		return s.Upload(ctx, destination, mode, content, options...)
 	}
+	if destination == "" {
+		_, err := s.List(ctx, "", options...)
+		if isBucketNotFound(err) {
+			if err = s.createBucket(ctx); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
