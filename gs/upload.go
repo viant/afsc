@@ -6,9 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"google.golang.org/api/googleapi"
 	gstorage "google.golang.org/api/storage/v1"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -47,13 +45,11 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	}
 	call.Media(bytes.NewReader(content))
 	object, err := call.Do()
-	if apiError, ok := err.(*googleapi.Error); ok {
-		if apiError.Code == http.StatusNotFound && strings.Contains(strings.ToLower(apiError.Message), "bucket") {
-			if err = s.createBucket(ctx); err != nil {
-				return err
-			}
-			object, err = call.Do()
+	if isBucketNotFound(err) {
+		if err = s.createBucket(ctx); err != nil {
+			return err
 		}
+		object, err = call.Do()
 	}
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload: gs://%v/%v", s.bucket, destination)
