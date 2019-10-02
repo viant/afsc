@@ -18,7 +18,6 @@ type storager struct {
 
 //Close closes storager
 func (s *storager) Close() error {
-	s.S3 = nil
 	return nil
 }
 
