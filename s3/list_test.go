@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
+	"github.com/viant/afs/matcher"
+	"github.com/viant/afs/storage"
 	"testing"
 )
 
@@ -22,6 +24,7 @@ func TestStorager_List(t *testing.T) {
 		URL         string
 		listURL     string
 		assets      []*asset.Resource
+		options     []storage.Option
 		expect      []string
 	}{
 		{
@@ -44,6 +47,20 @@ func TestStorager_List(t *testing.T) {
 			listURL: fmt.Sprintf("s3://%v/list02", TestBucket),
 			expect:  []string{"list02", "asset3.txt", "folder1"},
 		},
+		{
+			description: "multi asset list with matcher",
+			URL:         fmt.Sprintf("s3://%v/", TestBucket),
+			assets: []*asset.Resource{
+				asset.NewFile("list03/asset1.txt", []byte("test is test 1 "), 0655),
+				asset.NewFile("list03/asset2.json", []byte("test is test 1 "), 0655),
+				asset.NewFile("list03/asset3.csv", []byte("test is test 1 "), 0655),
+			},
+			options:[]storage.Option{
+				&matcher.Basic{Suffix:".json"},
+			},
+			listURL: fmt.Sprintf("s3://%v/list03", TestBucket),
+			expect:  []string{"asset2.json"},
+		},
 	}
 
 	mgr := New(authConfig)
@@ -55,9 +72,12 @@ func TestStorager_List(t *testing.T) {
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
-		objects, err := mgr.List(ctx, useCase.listURL)
+		objects, err := mgr.List(ctx, useCase.listURL, useCase.options...)
+		if ! assert.Nil(t, err, useCase.description) {
+			continue
+		}
 
-		assert.Nil(t, err, useCase.description)
+		assert.Equal(t, len(useCase.expect), len(objects), useCase.description)
 		actuals := make(map[string]bool)
 		for _, object := range objects {
 			actuals[object.Name()] = true

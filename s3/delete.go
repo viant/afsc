@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"path"
 )
@@ -21,7 +20,6 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 	_, err = s.S3.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
 		Bucket: &s.bucket,
 		Key:    &location,
-		BypassGovernanceRetention: aws.Bool(true),
 	})
 	return err
 }

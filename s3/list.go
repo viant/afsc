@@ -16,10 +16,7 @@ import (
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
-	page := &option.Page{}
-	var matcher option.Match
-	option.Assign(options, &page, &matcher)
-	matcher = option.GetMatchFunc(matcher)
+	matcher, page := option.GetListOptions(options)
 	var result = make([]os.FileInfo, 0)
 	if location == "" {
 		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)

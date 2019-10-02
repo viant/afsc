@@ -17,10 +17,7 @@ import (
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	var result = make([]os.FileInfo, 0)
-	page := &option.Page{}
-	var matcher option.Match
-	option.Assign(options, &page, &matcher)
-	matcher = option.GetMatchFunc(matcher)
+	matcher, page := option.GetListOptions(options)
 	err := s.list(ctx, location, &result, page, matcher)
 	return result, err
 }
