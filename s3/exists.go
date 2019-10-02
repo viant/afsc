@@ -9,7 +9,7 @@ import (
 func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
 	location = strings.Trim(location, "/")
 	list, err := s.List(ctx, location)
-	if err != nil && strings.Contains(strings.ToLower(err.Error()), "not found") {
+	if err != nil && strings.Contains(err.Error(), noSuchKeyMessage) {
 		err = nil
 	}
 	return len(list) > 0, err
