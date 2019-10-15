@@ -33,9 +33,9 @@ import (
 )
 
 func main() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	objects, err := service.List(ctx, "gs://myBucket/folder")
+	objects, err := fs.List(ctx, "gs://myBucket/folder")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func main() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := service.Download(ctx, object)
+		reader, err := fs.Download(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -56,7 +56,7 @@ func main() {
 		fmt.Printf("%s\n", data)
 	}
 
-	err = service.Copy(ctx, "gs://myBucket/folder", "s3://myBucket/cloned")
+	err = fs.Copy(ctx, "gs://myBucket/folder", "s3://myBucket/cloned")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,12 +70,12 @@ func main() {
 
 	customKey := s3.NewAES256Key([]byte("secret-key-that-is-32-bytes-long"))
 	ctx := context.Background()
-	service := afs.New()
-	err := service.Upload(ctx, "s3://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
+	fs := afs.New()
+	err := fs.Upload(ctx, "s3://mybucket/folder/secret1.txt", 0644, strings.NewReader("my secret text"), customKey)
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
+	reader, err := fs.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)

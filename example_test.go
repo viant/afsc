@@ -12,9 +12,9 @@ import (
 )
 
 func ExampleNew() {
-	service := afs.New()
+	fs := afs.New()
 	ctx := context.Background()
-	objects, err := service.List(ctx, "gs://myBucket/folder")
+	objects, err := fs.List(ctx, "gs://myBucket/folder")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func ExampleNew() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := service.Download(ctx, object)
+		reader, err := fs.Download(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -34,7 +34,7 @@ func ExampleNew() {
 		}
 		fmt.Printf("%s\n", data)
 	}
-	err = service.Copy(ctx, "gs://myBucket/folder", "s3://myBucket/cloned")
+	err = fs.Copy(ctx, "gs://myBucket/folder", "s3://myBucket/cloned")
 	if err != nil {
 		log.Fatal(err)
 	}
