@@ -3,9 +3,13 @@ package gs
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
+	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"google.golang.org/api/googleapi"
+	"strings"
 )
 
 type manager struct {
@@ -46,8 +50,22 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	return rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	err =  rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	if googleError, ok := err.(*googleapi.Error); ok {
+		//storage class related error, fallback for pull and push using local process memory
+		if strings.Contains(googleError.Message, "storageClass" ) {
+			reader, err  := m.DownloadWithURL(ctx,sourceURL)
+			if err != nil {
+				return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+			}
+			defer reader.Close()
+			return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...)
+		}
+	}
+	return err
 }
+
+
 
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}

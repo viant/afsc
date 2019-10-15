@@ -22,6 +22,13 @@ func NewTestJwtConfig() (*JwtConfig, error) {
 	return NewJwtConfig(option.NewLocation(secretPath))
 }
 
+//NewCustomTestJwtConfig returns a custom jwt confi
+func NewCustomTestJwtConfig(cred string) (*JwtConfig, error) {
+	secretPath := path.Join(os.Getenv("HOME"), ".secret", cred + ".json")
+	return NewJwtConfig(option.NewLocation(secretPath))
+}
+
+
 //NewTestStorager returns a test instance
 func NewTestStorager(ctx context.Context, bucket string) (storage.Storager, error) {
 	if bucket == "" {
