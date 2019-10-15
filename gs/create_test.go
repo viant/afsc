@@ -40,6 +40,7 @@ func TestStorager_Create(t *testing.T) {
 			},
 		},
 	}
+
 	mgr := New(jwtConfig)
 	defer mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
 	for _, useCase := range useCases {

@@ -98,11 +98,8 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 				mode = file.DefaultDirOsMode
 				object.Name = string(object.Name[:len(object.Name)-1])
 			}
-
 			_, name := path.Split(object.Name)
-
 			info := file.NewInfo(name, int64(object.Size), mode, modified, isDir, items[i])
-
 			if !matcher(parent, info) {
 				continue
 			}

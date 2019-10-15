@@ -33,6 +33,22 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	return rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
 }
 
+//Move moves data from source to dest
+func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
+	gsStorager, err := m.Storager(ctx, sourceURL, options...)
+	if err != nil {
+		return nil
+	}
+	rawStorager, ok := gsStorager.(*storager)
+	if !ok {
+		return fmt.Errorf("expected: %T, but had: %T", rawStorager, gsStorager)
+	}
+	sourcePath := url.Path(sourceURL)
+	destBucket := url.Host(destURL)
+	destPath := url.Path(destURL)
+	return rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+}
+
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}
 	baseMgr := base.New(result, Scheme, result.provider, options)

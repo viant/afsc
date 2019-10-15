@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	infoList, err := s.List(ctx, sourcePath)
@@ -22,7 +22,7 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 	for i := 1; i < len(infoList); i++ {
 		name := infoList[i].Name()
-		if err = s.Move(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
+		if err = s.Copy(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
 			return err
 		}
 	}
@@ -35,12 +35,8 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 	object, _ := info.Source.(*gstorage.Object)
 	object.Name = destPath
-	call := s.Objects.Rewrite(s.bucket, sourcePath, destBucket, destPath, object)
+	call := s.Objects.Copy(s.bucket, sourcePath, destBucket, destPath, object)
 	call.Context(ctx)
 	_, err = call.Do()
-	if err == nil {
-		err = s.Delete(ctx, sourcePath)
-	}
 	return err
-
 }

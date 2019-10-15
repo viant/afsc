@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	infoList, err := s.List(ctx, sourcePath)
@@ -22,21 +22,14 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 	for i := 1; i < len(infoList); i++ {
 		name := infoList[i].Name()
-		if err = s.Move(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
+		if err = s.Copy(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
 			return err
 		}
-	}
-
-	if infoList[0].IsDir() {
-		return s.Delete(ctx, sourcePath)
 	}
 	_, err = s.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
 		Key:        &destPath,
 		Bucket:     &destBucket,
 	})
-	if err == nil {
-		err = s.Delete(ctx, sourcePath)
-	}
 	return err
 }

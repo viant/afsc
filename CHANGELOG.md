@@ -1,3 +1,6 @@
+## October 2 2019 0.3.0
+  * Implemented copier interface  
+
 ## October 2 2019 0.2.2
   * Patched s3 exists
   * Updated s3 storager close

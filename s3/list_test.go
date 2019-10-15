@@ -7,6 +7,7 @@ import (
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/storage"
+	"log"
 	"testing"
 )
 
@@ -55,8 +56,8 @@ func TestStorager_List(t *testing.T) {
 				asset.NewFile("list03/asset2.json", []byte("test is test 1 "), 0655),
 				asset.NewFile("list03/asset3.csv", []byte("test is test 1 "), 0655),
 			},
-			options:[]storage.Option{
-				&matcher.Basic{Suffix:".json"},
+			options: []storage.Option{
+				&matcher.Basic{Suffix: ".json"},
 			},
 			listURL: fmt.Sprintf("s3://%v/list03", TestBucket),
 			expect:  []string{"asset2.json"},
@@ -66,6 +67,12 @@ func TestStorager_List(t *testing.T) {
 	mgr := New(authConfig)
 	defer mgr.Delete(ctx, fmt.Sprintf("s3://%v/", TestBucket))
 
+	objects, err := mgr.List(ctx, "s3://ms-e2e-ops/StorageMirrorCron/meta.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%v %v\n", objects[0].URL(), objects[0].ModTime())
+
 	for _, useCase := range useCases {
 
 		err = asset.Create(mgr, useCase.URL, useCase.assets)
@@ -73,7 +80,7 @@ func TestStorager_List(t *testing.T) {
 			continue
 		}
 		objects, err := mgr.List(ctx, useCase.listURL, useCase.options...)
-		if ! assert.Nil(t, err, useCase.description) {
+		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 
