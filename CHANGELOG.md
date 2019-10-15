@@ -1,5 +1,6 @@
-## October 15 2019 0.3.0
-  * Implemented copier interface  
+## October 15 2019 0.3.1
+  * Implemented copier interface
+  * Added copy fallback on google storage fallback in case storage class incompatibility  
 
 ## October 2 2019 0.2.2
   * Patched s3 exists
