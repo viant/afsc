@@ -1,4 +1,4 @@
-## October 2 2019 0.3.0
+## October 15 2019 0.3.0
   * Implemented copier interface  
 
 ## October 2 2019 0.2.2
