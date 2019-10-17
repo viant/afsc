@@ -8,8 +8,6 @@ import (
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"google.golang.org/api/googleapi"
-	"strings"
 )
 
 type manager struct {
@@ -34,7 +32,19 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	return rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	if isStorageClassError(err) {//simulate move operation in process
+		reader, err  := m.DownloadWithURL(ctx,sourceURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+		}
+		defer reader.Close()
+		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...);err == nil {
+			err = m.Delete(ctx, sourceURL, options...)
+		}
+	}
+	return err
+
 }
 
 //Move moves data from source to dest
@@ -51,16 +61,13 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err =  rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
-	if googleError, ok := err.(*googleapi.Error); ok {
-		//storage class related error, fallback for pull and push using local process memory
-		if strings.Contains(googleError.Message, "storageClass" ) {
-			reader, err  := m.DownloadWithURL(ctx,sourceURL)
-			if err != nil {
-				return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
-			}
-			defer reader.Close()
-			return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...)
+	if isStorageClassError(err) {//simulate move operation in process
+		reader, err  := m.DownloadWithURL(ctx,sourceURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
+		defer reader.Close()
+		return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...)
 	}
 	return err
 }

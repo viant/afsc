@@ -1,3 +1,6 @@
+## October 17 2019 0.3.2
+  * Added move fallback on google storage fallback in case storage class incompatibility
+  
 ## October 15 2019 0.3.1
   * Implemented copier interface
   * Added copy fallback on google storage fallback in case storage class incompatibility  

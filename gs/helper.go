@@ -7,6 +7,7 @@ import (
 )
 
 const notFound = "Not Found"
+const storageClass = "storageClass"
 
 func isBucketNotFound(err error) bool {
 	if err == nil {
@@ -18,4 +19,17 @@ func isBucketNotFound(err error) bool {
 		}
 	}
 	return strings.Contains(strings.ToLower(err.Error()), notFound)
+}
+
+
+func isStorageClassError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if apiError, ok := err.(*googleapi.Error); ok {
+		if apiError.Code == http.StatusBadRequest && strings.Contains(apiError.Message, storageClass) {
+			return true
+		}
+	}
+	return strings.Contains(err.Error(), storageClass)
 }
