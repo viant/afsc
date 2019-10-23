@@ -13,6 +13,7 @@ import (
 type storager struct {
 	*s3.S3
 	bucket string
+	region string
 	config *aws.Config
 }
 
@@ -27,16 +28,15 @@ func getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
 	region := &Region{}
 	authConfig := &AuthConfig{}
 	optionsCount := len(options)
-	options, _ = option.Assign(options, &config, &region)
-
+	options, _ = option.Assign(options, &config)
+	option.Assign(options, &region)
 	if hasAssign := len(options) != optionsCount; !hasAssign {
 		options, _ = option.Assign(options, &provider, &authConfig)
 		if provider != nil {
 			if config, err = provider.AwsConfig(); err != nil {
 				return nil, err
 			}
-		}
-		if authConfig.Key != "" {
+		} else if authConfig.Key != "" {
 			config, err = authConfig.AwsConfig()
 		}
 	}
@@ -51,7 +51,9 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 		bucket: url.Host(baseURL),
 	}
 	var err error
+
 	result.config, err = getAwsConfig(options)
+
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +62,12 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	} else {
 		result.S3 = s3.New(session.New())
 	}
+	output, err := result.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &result.bucket})
+	if err == nil {
+		if output.LocationConstraint != nil {
+			result.config.Region = output.LocationConstraint
+			result.S3 = s3.New(session.New(), result.config)
+		}
+	}
 	return result, nil
-
 }

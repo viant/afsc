@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -88,5 +89,8 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 		s.addFiles(parent, result, output.Contents, page, matcher)
 		return page.HasReachedLimit()
 	})
+	if err != nil {
+		err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
+	}
 	return files, folder, err
 }
