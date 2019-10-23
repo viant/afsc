@@ -42,6 +42,7 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...);err == nil {
 			err = m.Delete(ctx, sourceURL, options...)
 		}
+		return nil
 	}
 	return err
 
