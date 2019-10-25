@@ -28,8 +28,6 @@ func TestStorager_Copy(t *testing.T) {
 		assets      []*asset.Resource
 	}{
 
-
-
 		{
 			description: "single asset download",
 			URL:         fmt.Sprintf("gs://%v/", TestBucket),

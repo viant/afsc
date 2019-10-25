@@ -33,13 +33,13 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
-	if isStorageClassError(err) {//simulate move operation in process
-		reader, err  := m.DownloadWithURL(ctx,sourceURL)
+	if isStorageClassError(err) { //simulate move operation in process
+		reader, err := m.DownloadWithURL(ctx, sourceURL)
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
 		defer reader.Close()
-		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...);err == nil {
+		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...); err == nil {
 			err = m.Delete(ctx, sourceURL, options...)
 		}
 		return nil
@@ -61,9 +61,9 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	err =  rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
-	if isStorageClassError(err) {//simulate move operation in process
-		reader, err  := m.DownloadWithURL(ctx,sourceURL)
+	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	if isStorageClassError(err) { //simulate move operation in process
+		reader, err := m.DownloadWithURL(ctx, sourceURL)
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
@@ -72,8 +72,6 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	}
 	return err
 }
-
-
 
 func newManager(options ...storage.Option) *manager {
 	result := &manager{}

@@ -17,7 +17,6 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	return newStorager(ctx, baseURL, options...)
 }
 
-
 //Move moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	gsStorager, err := m.Storager(ctx, sourceURL, options)

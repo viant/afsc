@@ -13,13 +13,11 @@ import (
 //TestBucket test bucket
 var TestBucket = fmt.Sprintf("viantv0e2e%v", time.Now().Format("20060102"))
 
-
 //NewTestAuthConfig returns an auth config
 func NewTestAuthCustomConfig(cred string) (*AuthConfig, error) {
-	secretPath := path.Join(os.Getenv("HOME"), ".secret", cred + ".json")
+	secretPath := path.Join(os.Getenv("HOME"), ".secret", cred+".json")
 	return NewAuthConfig(option.NewLocation(secretPath))
 }
-
 
 //NewTestAuthConfig returns an auth config
 func NewTestAuthConfig() (*AuthConfig, error) {

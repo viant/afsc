@@ -26,7 +26,6 @@ func (s *storager) Close() error {
 	return nil
 }
 
-
 //Bucket returns bucket
 func (s *storager) Bucket(ctx context.Context) (*gstorage.Bucket, error) {
 	call := s.Buckets.Get(s.bucket)
@@ -70,12 +69,11 @@ func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
 		return false
 	}
 	jwtConfig, _ := s.filterAuthOption(authOptions)
-	if jwtConfig == nil  || s.config == nil{
+	if jwtConfig == nil || s.config == nil {
 		return true
 	}
-	return jwtConfig.PrivateKeyID != s.config.PrivateKeyID || ! bytes.Equal(jwtConfig.PrivateKey, s.config.PrivateKey)
+	return jwtConfig.PrivateKeyID != s.config.PrivateKeyID || !bytes.Equal(jwtConfig.PrivateKey, s.config.PrivateKey)
 }
-
 
 func newStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
 	var gcpOptions ClientOptions
@@ -85,7 +83,6 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	client := &client{
 		ctx: ctx,
 	}
-
 
 	if len(gcpOptions) == 0 {
 		client, err = newClient(ctx, options)
@@ -109,7 +106,7 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	if bucket == "" {
 		return nil, fmt.Errorf("bucket was empty, URL: %v", baseURL)
 	}
-	result :=  &storager{
+	result := &storager{
 		client:  client,
 		Service: service,
 		bucket:  bucket,
@@ -117,8 +114,6 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	result.config, _ = result.filterAuthOption(options)
 	return result, nil
 }
-
-
 
 //NewStorager returns new storager
 func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {

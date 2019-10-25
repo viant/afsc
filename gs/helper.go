@@ -21,7 +21,6 @@ func isBucketNotFound(err error) bool {
 	return strings.Contains(strings.ToLower(err.Error()), notFound)
 }
 
-
 func isStorageClassError(err error) bool {
 	if err == nil {
 		return false
