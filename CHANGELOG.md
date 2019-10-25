@@ -1,3 +1,6 @@
+## October 25 2019 0.4.0
+  * Implemented AuthTracker
+  
 ## October 23 2019 0.3.4
   * Patched error shadowing on move error fallback
   * Added region bucket loading 
