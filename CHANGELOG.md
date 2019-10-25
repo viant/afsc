@@ -1,4 +1,4 @@
-## October 25 2019 0.4.0
+## October 25 2019 0.4.1
   * Implemented AuthTracker
   
 ## October 23 2019 0.3.4

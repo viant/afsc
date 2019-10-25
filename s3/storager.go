@@ -28,7 +28,7 @@ func (s *storager) Close() error {
 //FilterAuthOptions filters auth options
 func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 	var authOptions = make([]storage.Option, 0)
-	if awsConfig, _ := s.filterAuthOption(options); awsConfig != nil {
+	if awsConfig, _ := filterAuthOption(options); awsConfig != nil {
 		authOptions = append(authOptions, awsConfig)
 	}
 	return authOptions
@@ -36,7 +36,7 @@ func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 }
 
 //FilterAuthOptions filters auth options
-func (s storager) filterAuthOption(options []storage.Option) (*aws.Config, error) {
+func filterAuthOption(options []storage.Option) (*aws.Config, error) {
 	config := &aws.Config{}
 	if _, ok := option.Assign(options, &config); ok {
 		return config, nil
@@ -59,7 +59,7 @@ func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
 	if len(authOptions) == 0 {
 		return false
 	}
-	awsConfig, _ := s.filterAuthOption(authOptions)
+	awsConfig, _ := filterAuthOption(authOptions)
 	if awsConfig == nil {
 		return false
 	}
@@ -74,8 +74,8 @@ func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
 	return cred.AccessKeyID != candidateCred.AccessKeyID || cred.SecretAccessKey != candidateCred.SecretAccessKey
 }
 
-func (s *storager) getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
-	if config, err = s.filterAuthOption(options); err != nil {
+func getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
+	if config, err = filterAuthOption(options); err != nil {
 		return nil, err
 	}
 	region := &Region{}
@@ -93,7 +93,7 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 		bucket: url.Host(baseURL),
 	}
 	var err error
-	result.config, err = result.getAwsConfig(options)
+	result.config, err = getAwsConfig(options)
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +103,9 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	} else {
 		result.S3 = s3.New(session.New())
 	}
-
 	output, err := result.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &result.bucket})
 	if err == nil {
-		if output.LocationConstraint != nil {
+		if output.LocationConstraint != nil && result.config != nil {
 			result.config.Region = output.LocationConstraint
 			result.S3 = s3.New(session.New(), result.config)
 		}
