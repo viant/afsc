@@ -21,7 +21,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 
 //Move moves data from source to dest
 func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
-	gsStorager, err := m.Storager(ctx, sourceURL, options...)
+	gsStorager, err := m.Storager(ctx, sourceURL, options)
 	if err != nil {
 		return nil
 	}
@@ -50,7 +50,7 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 
 //Move moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
-	gsStorager, err := m.Storager(ctx, sourceURL, options...)
+	gsStorager, err := m.Storager(ctx, sourceURL, options)
 	if err != nil {
 		return nil
 	}

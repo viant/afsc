@@ -1,5 +1,6 @@
-## October 23 2019 0.3.2
+## October 23 2019 0.3.4
   * Patched error shadowing on move error fallback
+  * Added region bucket loading 
 
 ## October 17 2019 0.3.2
   * Added move fallback on google storage fallback in case storage class incompatibility
