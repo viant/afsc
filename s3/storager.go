@@ -78,6 +78,9 @@ func getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
 	if config, err = filterAuthOption(options); err != nil {
 		return nil, err
 	}
+	if config == nil {
+		config = &aws.Config{}
+	}
 	region := &Region{}
 	if _, ok := option.Assign(options, &region); ok {
 		config.Region = &region.Name
@@ -105,7 +108,7 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	}
 	output, err := result.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &result.bucket})
 	if err == nil {
-		if output.LocationConstraint != nil && result.config != nil {
+		if output.LocationConstraint != nil  {
 			result.config.Region = output.LocationConstraint
 			result.S3 = s3.New(session.New(), result.config)
 		}
