@@ -4,15 +4,16 @@ import (
 	"context"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
+	"io"
 	"os"
 	"strings"
 )
 
 //Create creates a resource
-func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
+func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	if !isDir {
-		return s.Upload(ctx, destination, mode, content, options...)
+		return s.Upload(ctx, destination, mode, reader, options...)
 	}
 	if destination == "" {
 		if _, err := s.List(ctx, ""); err != nil {

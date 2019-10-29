@@ -109,3 +109,31 @@ md5 is computed for supplied content.
    	}
    	fmt.Printf("data: %s\n", data)
 ```
+
+
+- option.Checksum{Skip:true}: checksum (md5) is not computed to stream data in chunks
+- option.Stream: download reader reads data with specified stream PartSize 
+
+
+```go
+	_ = os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+	ctx := context.Background()
+	fs := afs.New()
+	sourceURL := "s3://myBucket/path/myasset.gz"
+	reader, err := fs.DownloadWithURL(ctx, sourceURL, option.NewStream(64*1024*1024, 0))
+	if err != nil {
+		log.Fatal(err)
+	}
+	jwtConfig, err := gs.NewJwtConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	destURL := "gs://myBucket/path/myasset.gz"
+	err = fs.Upload(ctx, destURL, 0644, reader, jwtConfig, &option.Checksum{Skip:true})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+
+```

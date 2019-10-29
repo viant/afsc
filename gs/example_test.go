@@ -64,7 +64,7 @@ func Example_Storager() {
 		log.Fatal(err)
 	}
 	location := "/myFolder/myfile"
-	err = service.Upload(ctx, location, 0644, []byte("somedata"))
+	err = service.Upload(ctx, location, 0644, strings.NewReader("somedata"))
 	if err != nil {
 		log.Fatal(err)
 	}

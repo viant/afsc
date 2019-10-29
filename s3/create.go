@@ -5,15 +5,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/storage"
+	"io"
 	"os"
 	"strings"
 )
 
 //Create creates a resource
-func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, content []byte, isDir bool, options ...storage.Option) error {
+func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	if !isDir {
-		return s.Upload(ctx, destination, mode, content, options...)
+		return s.Upload(ctx, destination, mode, reader, options...)
 	}
 	if destination == "" {
 		_, err := s.List(ctx, "", options...)

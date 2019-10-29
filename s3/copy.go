@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/storage"
 	"path"
 	"strings"
@@ -15,7 +16,7 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 	destPath = strings.Trim(destPath, "/")
 	infoList, err := s.List(ctx, sourcePath)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable list for copy: %v", sourcePath)
 	}
 	if len(infoList) == 0 {
 		return fmt.Errorf("%v: not found", sourcePath)
@@ -26,10 +27,17 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 			return err
 		}
 	}
+	if infoList[0].IsDir() {
+		return nil
+	}
+
 	_, err = s.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
 		Key:        &destPath,
 		Bucket:     &destBucket,
 	})
+	if err != nil {
+		err = errors.Wrapf(err, "failed to copy: s3://%v/%v to s3://%v/%v", s.bucket, sourcePath, destBucket, destPath)
+	}
 	return err
 }

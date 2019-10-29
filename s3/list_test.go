@@ -7,7 +7,6 @@ import (
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/matcher"
 	"github.com/viant/afs/storage"
-	"log"
 	"testing"
 )
 
@@ -66,12 +65,6 @@ func TestStorager_List(t *testing.T) {
 
 	mgr := New(authConfig)
 	defer mgr.Delete(ctx, fmt.Sprintf("s3://%v/", TestBucket))
-
-	objects, err := mgr.List(ctx, "s3://ms-e2e-ops/StorageMirrorCron/meta.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%v %v\n", objects[0].URL(), objects[0].ModTime())
 
 	for _, useCase := range useCases {
 

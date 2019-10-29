@@ -136,3 +136,35 @@ _Example:_
 
 
 ```
+
+
+- option.Checksum{Skip:true}: checksum (crc/md5) is not computed to stream data in chunks
+- option.Stream: download reader reads data with specified stream PartSize 
+
+
+```go
+
+    jwtConfig, err := gs.NewJwtConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	
+	ctx := context.Background()
+	fs := afs.New()
+	sourceURL := "gs://myBucket/path/myasset.gz"
+	reader, err := fs.DownloadWithURL(ctx, sourceURL, jwtConfig, option.NewStream(64*1024*1024, 0))
+	if err != nil {
+		log.Fatal(err)
+	}
+    
+	_ = os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+	destURL := "s3://myBucket/path/myasset.gz"
+	err = fs.Upload(ctx, destURL, 0644, reader, &option.Checksum{Skip:true})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+
+```

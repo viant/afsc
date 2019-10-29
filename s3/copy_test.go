@@ -56,9 +56,16 @@ func TestStorager_Copy(t *testing.T) {
 	}()
 	for _, useCase := range useCases {
 		err = asset.Create(mgr, useCase.URL, useCase.assets)
-		assert.Nil(t, err, useCase.description)
+		if !assert.Nil(t, err, useCase.description) {
+			continue
+		}
+
 		err := fs.Copy(ctx, url.Join(useCase.URL, useCase.source), url.Join(useCase.URL, useCase.dest), option.NewSource(authConfig))
-		assert.Nil(t, err)
+		if !assert.Nil(t, err, useCase.description) {
+			t.Errorf("failed to copy %v", err)
+			continue
+		}
+
 		for _, resource := range useCase.assets {
 			URL := url.Join(useCase.URL, resource.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
