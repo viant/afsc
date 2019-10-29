@@ -1,3 +1,8 @@
+## October 25 2019 0.6.0
+  * Implemented Stream Reader
+  * Added support for Steam/Checksum option
+  * Update Storage signature changes (breaking changes)
+
 ## October 25 2019 0.4.1
   * Implemented AuthTracker
   
