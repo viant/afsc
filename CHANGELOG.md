@@ -1,3 +1,6 @@
+## October 25 2019 0.6.1
+  * Patched initial over allocation on s3 reader
+  
 ## October 25 2019 0.6.0
   * Implemented Stream Reader
   * Added support for Steam/Checksum option

@@ -52,10 +52,10 @@ func (t *reader) Read(dest []byte) (int, error) {
 }
 
 //NewReadSeeker create a reader seeker
-func NewReadSeeker(ctx context.Context, input *s3.GetObjectInput, downloader *s3manager.Downloader, size int) io.ReadSeeker {
+func NewReadSeeker(ctx context.Context, input *s3.GetObjectInput, downloader *s3manager.Downloader, partSize, size int) io.ReadSeeker {
 	return &reader{
 		ctx:        ctx,
-		writer:     NewWriter(size),
+		writer:     NewWriter(partSize),
 		input:      input,
 		downloader: downloader,
 		size:       size,

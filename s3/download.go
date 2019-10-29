@@ -51,7 +51,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 		}
 		downloader.PartSize = int64(stream.PartSize)
 		stream.Size = int(objects[0].Size())
-		readSeeker := NewReadSeeker(ctx, input, downloader, stream.Size)
+		readSeeker := NewReadSeeker(ctx, input, downloader, stream.PartSize, stream.Size)
 		reader := base.NewStreamReader(stream, readSeeker)
 		return reader, nil
 	}
