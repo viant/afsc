@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -19,28 +20,35 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	crc := &option.Crc{}
 	md5 := &option.Md5{}
 	key := &option.AES256Key{}
-	post, _ := option.Assign(options, &md5, &crc, &key)
+	stream := &option.Stream{}
+	option.Assign(options, &md5, &crc, &key, &stream)
 	if len(key.Key) != 0 {
 		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
 		}
 	}
-	if len(post) != len(options) {
-		object, err := call.Do()
-		if err == nil {
-			if err = md5.Decode(object.Md5Hash); err == nil {
-				err = crc.Decode(object.Crc32c)
-			}
-		}
-		if err != nil {
-			return nil, err
+	object, err := call.Do()
+	if err == nil {
+		if err = md5.Decode(object.Md5Hash); err == nil {
+			err = crc.Decode(object.Crc32c)
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
+
 	if len(key.Key) != 0 {
 		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
 		}
 	}
+	if stream.PartSize > 0 {
+		stream.Size = int(object.Size)
+		readSeeker := NewReadSeeker(call, int(object.Size))
+		reader := base.NewStreamReader(stream, readSeeker)
+		return reader, nil
+	}
+
 	response, err := call.Download()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
