@@ -1,7 +1,10 @@
-## October 25 2019 0.6.1
-  * Patched initial overallocation on s3 reader
+## October 30 2019 0.6.2
+ * Added streaming option for move/copy fallback
+
+## October 28 2019 0.6.1
+  * Patched initial over- allocation on s3 reader
   
-## October 25 2019 0.6.0
+## October 27 2019 0.6.0
   * Implemented Stream Reader
   * Added support for Steam/Checksum option
   * Update Storage signature changes (breaking changes)

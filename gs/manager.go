@@ -6,9 +6,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 )
+
+
+const defaultPartSize = 32 * 1024 * 1024
 
 type manager struct {
 	*base.Manager
@@ -33,20 +37,27 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
-	if isStorageClassError(err) { //simulate move operation in process
-		reader, err := m.DownloadWithURL(ctx, sourceURL)
+	if isStorageClassError(err) {
+		objects, err := m.List(ctx, sourceURL)
+		if err != nil {
+			return errors.Wrapf(err, "move source not found %v", sourceURL)
+		}
+		//simulate move operation in process
+		reader, err := m.DownloadWithURL(ctx, sourceURL, option.NewStream(defaultPartSize, int(objects[0].Size())))
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
 		defer reader.Close()
+		options = append(options, option.NewChecksum(true))
 		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...); err == nil {
 			err = m.Delete(ctx, sourceURL, options...)
 		}
 		return nil
 	}
 	return err
-
 }
+
+
 
 //Move moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
@@ -63,11 +74,16 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destPath := url.Path(destURL)
 	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
 	if isStorageClassError(err) { //simulate move operation in process
-		reader, err := m.DownloadWithURL(ctx, sourceURL)
+		objects, err := m.List(ctx, sourceURL)
+		if err != nil {
+			return errors.Wrapf(err, "copy source not found %v", sourceURL)
+		}
+		reader, err := m.DownloadWithURL(ctx, sourceURL, option.NewStream(defaultPartSize, int(objects[0].Size())))
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
 		defer reader.Close()
+		options = append(options, option.NewChecksum(true))
 		return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...)
 	}
 	return err
