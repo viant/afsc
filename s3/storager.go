@@ -102,13 +102,22 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	}
 
 	if result.config != nil {
+		accessKeyId := ""
+		if cred, err := result.config.Credentials.Get(); err == nil {
+			accessKeyId = cred.AccessKeyID
+		}
+		Logf("created s3 service with custom config: keyId:%v, region: %v, bucket: %v", accessKeyId, *result.config.Region, result.bucket)
 		result.S3 = s3.New(session.New(), result.config)
 	} else {
 		result.S3 = s3.New(session.New())
 	}
 	output, err := result.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &result.bucket})
+	if err != nil {
+		Logf("unable to get '%v' bucket location: %v", result.bucket, err)
+	}
 	if err == nil {
 		if output.LocationConstraint != nil {
+			Logf("updated config location to: %v from '%v' bucket", *output.LocationConstraint, result.bucket)
 			result.config.Region = output.LocationConstraint
 			result.S3 = s3.New(session.New(), result.config)
 		}
