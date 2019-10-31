@@ -1,4 +1,4 @@
-## October 30 2019 0.6.2
+## October 30 2019 0.6.4
  * Added streaming option for move/copy fallback
 
 ## October 28 2019 0.6.1
