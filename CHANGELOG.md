@@ -1,4 +1,4 @@
-## October 30 2019 0.6.4
+## October 30 2019 0.6.5
  * Added streaming option for move/copy fallback
  * Added s3 logging
  

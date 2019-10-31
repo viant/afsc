@@ -3,10 +3,15 @@ package s3
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 )
+
+const defaultPartSize = 10 * 1024 * 1024
 
 
 type manager struct {
@@ -31,7 +36,22 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	return rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	if isFallbackError(err) { //simulate move operation in process
+		objects, err := m.List(ctx, sourceURL, options...)
+		if err != nil {
+			return errors.Wrapf(err, "copy source not found %v", sourceURL)
+		}
+		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
+		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+		if err != nil {
+			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+		}
+		defer reader.Close()
+		uploadOptions := append(options, option.NewChecksum(true))
+		return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
+	}
+	return err
 }
 
 //Move moves data from source to dest
@@ -47,7 +67,24 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	return rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	err =  rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	if isFallbackError(err) { //simulate move operation in process
+		objects, err := m.List(ctx, sourceURL, options...)
+		if err != nil {
+			return errors.Wrapf(err, "copy source not found %v", sourceURL)
+		}
+		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
+		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+		if err != nil {
+			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+		}
+		defer reader.Close()
+		uploadOptions := append(options, option.NewChecksum(true))
+		if err =  m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...);err == nil {
+			err = m.Delete(ctx, sourceURL)
+		}
+	}
+	return err
 }
 
 func newManager(options ...storage.Option) *manager {

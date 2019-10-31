@@ -37,13 +37,14 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
-	if isStorageClassError(err) {
-		objects, err := m.List(ctx, sourceURL)
+	if isFallbackError(err) {
+		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "move source not found %v", sourceURL)
 		}
+		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
 		//simulate move operation in process
-		reader, err := m.DownloadWithURL(ctx, sourceURL, option.NewStream(defaultPartSize, int(objects[0].Size())))
+		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}
@@ -73,12 +74,13 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
-	if isStorageClassError(err) { //simulate move operation in process
-		objects, err := m.List(ctx, sourceURL)
+	if isFallbackError(err) { //simulate move operation in process
+		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "copy source not found %v", sourceURL)
 		}
-		reader, err := m.DownloadWithURL(ctx, sourceURL, option.NewStream(defaultPartSize, int(objects[0].Size())))
+		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
+		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
 		if err != nil {
 			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 		}

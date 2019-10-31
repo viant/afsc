@@ -3,6 +3,7 @@ package gs
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
@@ -13,16 +14,16 @@ import (
 func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
-	infoList, err := s.List(ctx, sourcePath)
+	infoList, err := s.List(ctx, sourcePath, options...)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable list copy source: gs://%v/%v", s.bucket, sourcePath)
 	}
 	if len(infoList) == 0 {
 		return fmt.Errorf("%v: not found", sourcePath)
 	}
 	for i := 1; i < len(infoList); i++ {
 		name := infoList[i].Name()
-		if err = s.Copy(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
+		if err = s.Copy(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name), options...); err != nil {
 			return err
 		}
 	}
