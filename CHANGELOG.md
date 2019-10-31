@@ -1,6 +1,7 @@
 ## October 30 2019 0.6.4
  * Added streaming option for move/copy fallback
-
+ * Added s3 logging
+ 
 ## October 28 2019 0.6.1
   * Patched initial over- allocation on s3 reader
   
