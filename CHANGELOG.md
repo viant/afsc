@@ -1,4 +1,4 @@
-## October 30 2019 0.7.0
+## November 1 2019 0.7.0
  * Added streaming option for move/copy fallback
  * Added s3 logging
  * Reanmed Checksum to SkipChecksum reference
