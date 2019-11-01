@@ -1,6 +1,9 @@
 package logger
 
-import "fmt"
+import (
+	"log"
+	"strings"
+)
 
 //Log represent log function
 type Log func(format string, args ...interface{})
@@ -15,7 +18,8 @@ func VoidLogger(format string, args ...interface{}) {
 
 //StdoutLogger represents stdout logger
 func StdoutLogger(format string, args ...interface{}) {
-	fmt.Print(fmt.Sprintf(format, args...) + "\n")
+	if ! strings.Contains(format, "\n") {
+		format += "\n"
+	}
+	log.Printf(format, args...)
 }
-
-
