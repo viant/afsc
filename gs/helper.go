@@ -31,6 +31,6 @@ func isFallbackError(err error) bool {
 			return true
 		}
 	}
-	errorMessage:=strings.ToLower(err.Error())
+	errorMessage := strings.ToLower(err.Error())
 	return strings.Contains(errorMessage, storageClassFragment) || strings.Contains(errorMessage, encryptionFragment)
 }

@@ -23,8 +23,7 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	return newStorager(ctx, baseURL, options...)
 }
 
-
-func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, options [] storage.Option) error {
+func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, options []storage.Option) error {
 	objects, err := m.List(ctx, sourceURL, options...)
 	if err != nil {
 		return errors.Wrapf(err, "copy source not found %v", sourceURL)
@@ -35,7 +34,7 @@ func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, o
 		return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 	}
 	defer reader.Close()
-	uploadOptions := append(options, option.NewChecksum(true))
+	uploadOptions := append(options, option.NewSkipChecksum(true))
 	return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
 }
 
@@ -52,13 +51,18 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
-
-	if isFallbackError(err) { //simulate move operation in process
-		logger.Logf("fallback copy: %v", err)
+	key := &option.AES256Key{}
+	_, hasKey := option.Assign(options, &key)
+	if !hasKey {
+		err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+	}
+	if isFallbackError(err) || hasKey { //simulate move operation in process
+		if err != nil {
+			logger.Logf("fallback copy: %v", err)
+		}
 		err = m.copyInMemory(ctx, sourceURL, destURL, options)
 		if err != nil {
-			err = errors.Wrapf(err,"failed to copy in memory")
+			err = errors.Wrapf(err, "failed to copy in memory")
 		}
 		return err
 	}
@@ -78,15 +82,21 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
-	if isFallbackError(err) { //simulate move operation in process
-		logger.Logf("fallback move: %v", err)
+	key := &option.AES256Key{}
+	_, hasKey := option.Assign(options, &key)
+	if !hasKey {
+		err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	}
+	if isFallbackError(err) || hasKey { //simulate move operation in process
+		if err != nil {
+			logger.Logf("fallback move: %v", err)
+		}
 		err = m.copyInMemory(ctx, sourceURL, destURL, options)
 		if err == nil {
 			err = m.Delete(ctx, sourceURL)
 		}
 		if err != nil {
-			err = errors.Wrapf(err,"failed to move in memory")
+			err = errors.Wrapf(err, "failed to move in memory")
 		}
 	}
 	return err

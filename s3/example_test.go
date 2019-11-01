@@ -160,7 +160,7 @@ func Example_Streaming() {
 		log.Fatal(err)
 	}
 	destURL := "gs://myBucket/path/myasset.gz"
-	err = fs.Upload(ctx, destURL, 0644, reader, jwtConfig, &option.Checksum{Skip: true})
+	err = fs.Upload(ctx, destURL, 0644, reader, jwtConfig, &option.SkipChecksum{Skip: true})
 	if err != nil {
 		log.Fatal(err)
 		return

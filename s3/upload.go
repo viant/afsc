@@ -37,7 +37,7 @@ func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5,
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
-	checksum := &option.Checksum{}
+	checksum := &option.SkipChecksum{}
 	option.Assign(options, &md5Hash, &key, &checksum)
 
 	if !checksum.Skip {

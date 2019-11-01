@@ -31,7 +31,7 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 		Name:   destination,
 	}
 
-	checksum := &option.Checksum{}
+	checksum := &option.SkipChecksum{}
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}

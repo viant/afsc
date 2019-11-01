@@ -18,7 +18,7 @@ func VoidLogger(format string, args ...interface{}) {
 
 //StdoutLogger represents stdout logger
 func StdoutLogger(format string, args ...interface{}) {
-	if ! strings.Contains(format, "\n") {
+	if !strings.Contains(format, "\n") {
 		format += "\n"
 	}
 	log.Printf(format, args...)
