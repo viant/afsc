@@ -1,7 +1,7 @@
 ## November 1 2019 0.7.0
  * Added streaming option for move/copy fallback
  * Added s3 logging
- * Reanmed Checksum to SkipChecksum reference
+ * Renamed Checksum to SkipChecksum reference
  
 ## October 28 2019 0.6.1
   * Patched initial over- allocation on s3 reader
