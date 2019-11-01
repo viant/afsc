@@ -9,10 +9,10 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"github.com/viant/afsc/logger"
 )
 
 const defaultPartSize = 10 * 1024 * 1024
-
 
 type manager struct {
 	*base.Manager
@@ -37,7 +37,9 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
 	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
+
 	if isFallbackError(err) { //simulate move operation in process
+		logger.Logf("fallback copy: %v", err)
 		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "copy source not found %v", sourceURL)
@@ -67,8 +69,9 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)
 	destPath := url.Path(destURL)
-	err =  rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
 	if isFallbackError(err) { //simulate move operation in process
+		logger.Logf("fallback move: %v", err)
 		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "copy source not found %v", sourceURL)
@@ -80,7 +83,7 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 		}
 		defer reader.Close()
 		uploadOptions := append(options, option.NewChecksum(true))
-		if err =  m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...);err == nil {
+		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...); err == nil {
 			err = m.Delete(ctx, sourceURL)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"github.com/viant/afsc/logger"
 )
 
 
@@ -38,6 +39,7 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	destPath := url.Path(destURL)
 	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
 	if isFallbackError(err) {
+		logger.Logf("fallback move: %v", err)
 		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "move source not found %v", sourceURL)
@@ -75,6 +77,7 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destPath := url.Path(destURL)
 	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
 	if isFallbackError(err) { //simulate move operation in process
+		logger.Logf("fallback copy: %v", err)
 		objects, err := m.List(ctx, sourceURL, options...)
 		if err != nil {
 			return errors.Wrapf(err, "copy source not found %v", sourceURL)
