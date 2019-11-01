@@ -23,6 +23,22 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	return newStorager(ctx, baseURL, options...)
 }
 
+
+func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, options [] storage.Option) error {
+	objects, err := m.List(ctx, sourceURL, options...)
+	if err != nil {
+		return errors.Wrapf(err, "copy source not found %v", sourceURL)
+	}
+	downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
+	reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+	if err != nil {
+		return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+	}
+	defer reader.Close()
+	uploadOptions := append(options, option.NewChecksum(true))
+	return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
+}
+
 //Move moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	gsStorager, err := m.Storager(ctx, sourceURL, options)
@@ -40,18 +56,11 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 
 	if isFallbackError(err) { //simulate move operation in process
 		logger.Logf("fallback copy: %v", err)
-		objects, err := m.List(ctx, sourceURL, options...)
+		err = m.copyInMemory(ctx, sourceURL, destURL, options)
 		if err != nil {
-			return errors.Wrapf(err, "copy source not found %v", sourceURL)
+			err = errors.Wrapf(err,"failed to copy in memory")
 		}
-		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
-		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
-		if err != nil {
-			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
-		}
-		defer reader.Close()
-		uploadOptions := append(options, option.NewChecksum(true))
-		return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
+		return err
 	}
 	return err
 }
@@ -72,19 +81,12 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
 	if isFallbackError(err) { //simulate move operation in process
 		logger.Logf("fallback move: %v", err)
-		objects, err := m.List(ctx, sourceURL, options...)
-		if err != nil {
-			return errors.Wrapf(err, "copy source not found %v", sourceURL)
-		}
-		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
-		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
-		if err != nil {
-			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
-		}
-		defer reader.Close()
-		uploadOptions := append(options, option.NewChecksum(true))
-		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...); err == nil {
+		err = m.copyInMemory(ctx, sourceURL, destURL, options)
+		if err == nil {
 			err = m.Delete(ctx, sourceURL)
+		}
+		if err != nil {
+			err = errors.Wrapf(err,"failed to move in memory")
 		}
 	}
 	return err

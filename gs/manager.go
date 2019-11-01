@@ -12,7 +12,6 @@ import (
 	"github.com/viant/afsc/logger"
 )
 
-
 const defaultPartSize = 32 * 1024 * 1024
 
 type manager struct {
@@ -24,42 +23,20 @@ func (m *manager) provider(ctx context.Context, baseURL string, options ...stora
 	return newStorager(ctx, baseURL, options...)
 }
 
-//Move moves data from source to dest
-func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
-	gsStorager, err := m.Storager(ctx, sourceURL, options)
+func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, options [] storage.Option) error {
+	objects, err := m.List(ctx, sourceURL, options...)
 	if err != nil {
-		return nil
+		return errors.Wrapf(err, "copy source not found %v", sourceURL)
 	}
-	rawStorager, ok := gsStorager.(*storager)
-	if !ok {
-		return fmt.Errorf("expected: %T, but had: %T", rawStorager, gsStorager)
+	downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
+	reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+	if err != nil {
+		return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
 	}
-	sourcePath := url.Path(sourceURL)
-	destBucket := url.Host(destURL)
-	destPath := url.Path(destURL)
-	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
-	if isFallbackError(err) {
-		logger.Logf("fallback move: %v", err)
-		objects, err := m.List(ctx, sourceURL, options...)
-		if err != nil {
-			return errors.Wrapf(err, "move source not found %v", sourceURL)
-		}
-		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
-		//simulate move operation in process
-		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
-		if err != nil {
-			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
-		}
-		defer reader.Close()
-		options = append(options, option.NewChecksum(true))
-		if err = m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...); err == nil {
-			err = m.Delete(ctx, sourceURL, options...)
-		}
-		return nil
-	}
-	return err
+	defer reader.Close()
+	uploadOptions := append(options, option.NewChecksum(true))
+	return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
 }
-
 
 
 //Move moves data from source to dest
@@ -78,18 +55,39 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
 	if isFallbackError(err) { //simulate move operation in process
 		logger.Logf("fallback copy: %v", err)
-		objects, err := m.List(ctx, sourceURL, options...)
+		err = m.copyInMemory(ctx, sourceURL, destURL, options)
 		if err != nil {
-			return errors.Wrapf(err, "copy source not found %v", sourceURL)
+			err = errors.Wrapf(err, "failed to copy in memory")
 		}
-		downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
-		reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+		return err
+	}
+	return err
+}
+
+
+//Move moves data from source to dest
+func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
+	gsStorager, err := m.Storager(ctx, sourceURL, options)
+	if err != nil {
+		return nil
+	}
+	rawStorager, ok := gsStorager.(*storager)
+	if !ok {
+		return fmt.Errorf("expected: %T, but had: %T", rawStorager, gsStorager)
+	}
+	sourcePath := url.Path(sourceURL)
+	destBucket := url.Host(destURL)
+	destPath := url.Path(destURL)
+	err = rawStorager.Move(ctx, sourcePath, destBucket, destPath, options...)
+	if isFallbackError(err) { //simulate move operation in process
+		logger.Logf("fallback move: %v", err)
+		err = m.copyInMemory(ctx, sourceURL, destURL, options)
+		if err == nil {
+			err = m.Delete(ctx, sourceURL)
+		}
 		if err != nil {
-			return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+			err = errors.Wrapf(err,"failed to move in memory")
 		}
-		defer reader.Close()
-		options = append(options, option.NewChecksum(true))
-		return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, options...)
 	}
 	return err
 }
