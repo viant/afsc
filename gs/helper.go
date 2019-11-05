@@ -4,6 +4,7 @@ import (
 	"google.golang.org/api/googleapi"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const notFound = "Not Found"
@@ -47,4 +48,9 @@ func isFallbackError(err error) bool {
 	}
 	errorMessage := strings.ToLower(err.Error())
 	return strings.Contains(errorMessage, storageClassFragment) || strings.Contains(errorMessage, encryptionFragment)
+}
+
+
+func sleepBeforeRetry() {
+	time.Sleep(3 * time.Second)
 }

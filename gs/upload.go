@@ -29,6 +29,7 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	if !isBackendError(err) {
 		return err
 	}
+	sleepBeforeRetry()
 	return s.upload(ctx, destination, mode, reader, options)
 }
 

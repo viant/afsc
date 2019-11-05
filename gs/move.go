@@ -15,6 +15,7 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	if !isBackendError(err) {
 		return err
 	}
+	sleepBeforeRetry()
 	return s.move(ctx, sourcePath, destBucket, destPath, options)
 }
 

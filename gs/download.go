@@ -17,6 +17,7 @@ func (s *storager) Download(ctx context.Context, location string, options ...sto
 	if !isBackendError(err) {
 		return reader, err
 	}
+	sleepBeforeRetry()
 	return s.download(ctx, location, options)
 }
 

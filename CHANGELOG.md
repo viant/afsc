@@ -1,5 +1,6 @@
-## November 1 2019 0.7.1
+## November 5 2019 0.7.2
   * Added retry on backenError
+  * Added sleep retry on backendError
   
 ## November 1 2019 0.7.0
  * Added streaming option for move/copy fallback

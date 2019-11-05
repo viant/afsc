@@ -19,6 +19,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	if !isBackendError(err) {
 		return files, err
 	}
+	sleepBeforeRetry()
 	return s.listFiles(ctx, location, options)
 }
 

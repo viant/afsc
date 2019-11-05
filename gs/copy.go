@@ -16,6 +16,7 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 	if !isBackendError(err) {
 		return err
 	}
+	sleepBeforeRetry()
 	return s.copy(ctx, sourcePath, destBucket, destPath, options)
 }
 
