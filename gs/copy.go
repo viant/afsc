@@ -11,7 +11,15 @@ import (
 	"strings"
 )
 
-func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
+	err = s.copy(ctx, sourcePath, destBucket, destPath, options)
+	if !isBackendError(err) {
+		return err
+	}
+	return s.copy(ctx, sourcePath, destBucket, destPath, options)
+}
+
+func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	infoList, err := s.List(ctx, sourcePath, options...)

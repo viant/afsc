@@ -1,3 +1,6 @@
+## November 1 2019 0.7.1
+  * Added retry on backenError
+  
 ## November 1 2019 0.7.0
  * Added streaming option for move/copy fallback
  * Added s3 logging

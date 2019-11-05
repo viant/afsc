@@ -24,7 +24,16 @@ func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, 
 }
 
 //Upload uploads content
-func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) (err error) {
+	err = s.upload(ctx, destination, mode, reader, options)
+	if !isBackendError(err) {
+		return err
+	}
+	return s.upload(ctx, destination, mode, reader, options)
+}
+
+//Upload uploads content
+func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	object := &gstorage.Object{
 		Bucket: s.bucket,

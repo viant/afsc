@@ -15,6 +15,15 @@ import (
 
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
+	files, err := s.listFiles(ctx, location, options)
+	if !isBackendError(err) {
+		return files, err
+	}
+	return s.listFiles(ctx, location, options)
+}
+
+//List list directory or returns a file info
+func (s *storager) listFiles(ctx context.Context, location string, options []storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	var result = make([]os.FileInfo, 0)
 	matcher, page := option.GetListOptions(options)

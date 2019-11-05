@@ -12,8 +12,16 @@ import (
 	"strings"
 )
 
-//Download return content reader and hash values if md5 or crc option is supplied or error
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+	reader, err := s.download(ctx, location, options)
+	if !isBackendError(err) {
+		return reader, err
+	}
+	return s.download(ctx, location, options)
+}
+
+//Download return content reader and hash values if md5 or crc option is supplied or error
+func (s *storager) download(ctx context.Context, location string, options []storage.Option) (io.ReadCloser, error) {
 	location = strings.Trim(location, "/")
 	call := s.Objects.Get(s.bucket, location)
 	call.Context(ctx)

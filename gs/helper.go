@@ -10,6 +10,20 @@ const notFound = "Not Found"
 const storageClassFragment = "storageclass"
 const encryptionFragment = "encryption"
 
+const backendError = "backendError"
+
+//isBackendError returns true if backend error
+func isBackendError(err error) bool {
+	if err == nil {
+		return false
+	}
+	message := err.Error()
+	if message == "" {
+		return false
+	}
+	return strings.Contains(message, backendError)
+}
+
 func isBucketNotFound(err error) bool {
 	if err == nil {
 		return false
