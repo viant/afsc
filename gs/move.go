@@ -11,12 +11,14 @@ import (
 )
 
 func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
-	err = s.move(ctx, sourcePath, destBucket, destPath, options)
-	if !isBackendError(err) {
-		return err
+	for i := 0; i < maxRetries; i++ {
+		err = s.move(ctx, sourcePath, destBucket, destPath, options)
+		if !isRetryError(err) {
+			return err
+		}
+		sleepBeforeRetry()
 	}
-	sleepBeforeRetry()
-	return s.move(ctx, sourcePath, destBucket, destPath, options)
+	return err
 }
 
 func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {

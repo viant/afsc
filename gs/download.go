@@ -12,13 +12,15 @@ import (
 	"strings"
 )
 
-func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
-	reader, err := s.download(ctx, location, options)
-	if !isBackendError(err) {
-		return reader, err
+func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {
+	for i := 0; i < maxRetries; i++ {
+		reader, err = s.download(ctx, location, options)
+		if !isRetryError(err) {
+			return reader, err
+		}
+		sleepBeforeRetry()
 	}
-	sleepBeforeRetry()
-	return s.download(ctx, location, options)
+	return reader, err
 }
 
 //Download return content reader and hash values if md5 or crc option is supplied or error

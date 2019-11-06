@@ -25,12 +25,14 @@ func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, 
 
 //Upload uploads content
 func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) (err error) {
-	err = s.upload(ctx, destination, mode, reader, options)
-	if !isBackendError(err) {
-		return err
+	for i := 0; i < maxRetries; i++ {
+		err = s.upload(ctx, destination, mode, reader, options)
+		if !isRetryError(err) {
+			return err
+		}
+		sleepBeforeRetry()
 	}
-	sleepBeforeRetry()
-	return s.upload(ctx, destination, mode, reader, options)
+	return err
 }
 
 //Upload uploads content

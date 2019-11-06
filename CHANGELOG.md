@@ -1,4 +1,4 @@
-## November 5 2019 0.7.2
+## November 5 2019 0.7.3
   * Added retry on backenError
   * Added sleep retry on backendError
   

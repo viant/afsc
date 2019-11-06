@@ -10,18 +10,20 @@ import (
 const notFound = "Not Found"
 const storageClassFragment = "storageclass"
 const encryptionFragment = "encryption"
-
 const backendError = "backendError"
+const maxRetries = 3
 
-//isBackendError returns true if backend error
-func isBackendError(err error) bool {
+//isRetryError returns true if backend error
+func isRetryError(err error) bool {
 	if err == nil {
 		return false
 	}
-	message := err.Error()
-	if message == "" {
-		return false
+	if apiError, ok := err.(*googleapi.Error); ok {
+		if apiError.Code == http.StatusServiceUnavailable {
+			return true
+		}
 	}
+	message := err.Error()
 	return strings.Contains(message, backendError)
 }
 
@@ -49,7 +51,6 @@ func isFallbackError(err error) bool {
 	errorMessage := strings.ToLower(err.Error())
 	return strings.Contains(errorMessage, storageClassFragment) || strings.Contains(errorMessage, encryptionFragment)
 }
-
 
 func sleepBeforeRetry() {
 	time.Sleep(3 * time.Second)

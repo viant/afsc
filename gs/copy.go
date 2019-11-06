@@ -12,12 +12,14 @@ import (
 )
 
 func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
-	err = s.copy(ctx, sourcePath, destBucket, destPath, options)
-	if !isBackendError(err) {
-		return err
+	for i := 0; i < maxRetries; i++ {
+		err = s.copy(ctx, sourcePath, destBucket, destPath, options)
+		if !isRetryError(err) {
+			return err
+		}
+		sleepBeforeRetry()
 	}
-	sleepBeforeRetry()
-	return s.copy(ctx, sourcePath, destBucket, destPath, options)
+	return err
 }
 
 func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {

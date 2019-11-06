@@ -14,13 +14,15 @@ import (
 )
 
 //List list directory or returns a file info
-func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
-	files, err := s.listFiles(ctx, location, options)
-	if !isBackendError(err) {
-		return files, err
+func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
+	for i := 0; i < maxRetries; i++ {
+		files, err = s.listFiles(ctx, location, options)
+		if !isRetryError(err) {
+			return files, err
+		}
+		sleepBeforeRetry()
 	}
-	sleepBeforeRetry()
-	return s.listFiles(ctx, location, options)
+	return files, err
 }
 
 //List list directory or returns a file info
