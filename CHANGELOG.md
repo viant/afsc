@@ -1,3 +1,6 @@
+## November 5 2019 0.7.4
+  * Added upload storage.Object option (to reduce Object call)
+  
 ## November 5 2019 0.7.3
   * Added retry on backenError
   * Added sleep retry on backendError
