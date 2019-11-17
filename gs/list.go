@@ -96,22 +96,30 @@ func (s *storager) addFolders(ctx context.Context, parent string, objects *gstor
 	return nil
 }
 
+func newFileInfo(object *gstorage.Object) (os.FileInfo, error) {
+	modified, err := time.Parse(time.RFC3339, object.Updated)
+	if err != nil {
+		return nil, err
+	}
+	mode := file.DefaultFileOsMode
+	isDir := strings.HasSuffix(object.Name, "/")
+	if isDir {
+		mode = file.DefaultDirOsMode
+		object.Name = string(object.Name[:len(object.Name)-1])
+	}
+	_, name := path.Split(object.Name)
+	return file.NewInfo(name, int64(object.Size), mode, modified, isDir, object), nil
+}
+
+
+
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if items := objects.Items; len(items) > 0 {
-		for i, object := range items {
-
-			modified, err := time.Parse(time.RFC3339, object.Updated)
+		for i := range items {
+			info, err := newFileInfo(items[i])
 			if err != nil {
 				return err
 			}
-			mode := file.DefaultFileOsMode
-			isDir := strings.HasSuffix(object.Name, "/")
-			if isDir {
-				mode = file.DefaultDirOsMode
-				object.Name = string(object.Name[:len(object.Name)-1])
-			}
-			_, name := path.Split(object.Name)
-			info := file.NewInfo(name, int64(object.Size), mode, modified, isDir, items[i])
 			if !matcher(parent, info) {
 				continue
 			}

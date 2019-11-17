@@ -3,7 +3,9 @@ package gs
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
@@ -38,27 +40,28 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 //Upload uploads content
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	destination = strings.Trim(destination, "/")
-	object := &gstorage.Object{
+
+	gobject := &gstorage.Object{
 		Bucket: s.bucket,
 		Name:   destination,
 	}
 
+	var newObject *storage.Object
 	checksum := &option.SkipChecksum{}
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
-	option.Assign(options, &md5Hash, &crcHash, &key, &checksum)
+	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
 
 	if !checksum.Skip {
 		content, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return err
 		}
-		s.updateChecksum(object, crcHash, md5Hash, content)
+		s.updateChecksum(gobject, crcHash, md5Hash, content)
 		reader = bytes.NewReader(content)
 	}
-
-	call := s.Objects.Insert(s.bucket, object)
+	call := s.Objects.Insert(s.bucket, gobject)
 	call.Context(ctx)
 	if len(key.Key) > 0 {
 		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
@@ -72,12 +75,12 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	} else {
 		call.Media(reader)
 	}
-	object, err := call.Do()
+	gobject, err := call.Do()
 	if isBucketNotFound(err) {
 		if err = s.createBucket(ctx); err != nil {
 			return err
 		}
-		object, err = call.Do()
+		gobject, err = call.Do()
 	}
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload: gs://%v/%v", s.bucket, destination)
@@ -87,8 +90,12 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	if !ok {
 		return nil
 	}
-	if int64(object.Size) != sizer.Size() {
-		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), object.Size)
+	if newObject != nil {
+		info, _ := newFileInfo(gobject)
+		*newObject = object.New(fmt.Sprintf("%v://%v/%v", Scheme, s.bucket, destination), info, gobject)
+	}
+	if int64(gobject.Size) != sizer.Size() {
+		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), gobject.Size)
 	}
 	return err
 }
