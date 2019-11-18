@@ -75,7 +75,6 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 
 	if generation != nil {
-		fmt.Printf("Gen: %v\n", generation)
 		if generation.WhenMatch {
 			call.IfGenerationMatch(generation.Generation)
 		} else {
