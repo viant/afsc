@@ -51,7 +51,12 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
+	generation := &option.Generation{}
 	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
+
+	if _, assigned := option.Assign(options, &generation); !assigned {
+		generation = nil
+	}
 
 	if !checksum.Skip {
 		content, err := ioutil.ReadAll(reader)
@@ -69,10 +74,20 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 	}
 
+	if generation != nil {
+		fmt.Printf("Gen: %v\n", generation)
+		if generation.WhenMatch {
+			call.IfGenerationMatch(generation.Generation)
+		} else {
+			call.IfGenerationNotMatch(generation.Generation)
+		}
+	}
+
 	if readerAt, ok := reader.(io.ReaderAt); ok {
 		sizer := reader.(storage.Sizer)
 		call = call.ResumableMedia(ctx, readerAt, sizer.Size(), detectContentType(destination))
 	} else {
+
 		call.Media(reader)
 	}
 	gobject, err := call.Do()

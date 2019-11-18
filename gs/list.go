@@ -111,8 +111,6 @@ func newFileInfo(object *gstorage.Object) (os.FileInfo, error) {
 	return file.NewInfo(name, int64(object.Size), mode, modified, isDir, object), nil
 }
 
-
-
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if items := objects.Items; len(items) > 0 {
 		for i := range items {
