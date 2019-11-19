@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"os"
@@ -18,9 +19,12 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 		return newFileInfo(object)
 	}
 	options = append(options, option.NewPage(0, 1))
-	list, err := s.List(ctx, location, options...)
+	objects, err := s.List(ctx, location, options...)
 	if err != nil {
 		return nil, err
 	}
-	return list[0], err
+	if len(objects) == 0 {
+		return nil, errors.Errorf("%v not found", location)
+	}
+	return objects[0], err
 }

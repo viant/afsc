@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -38,9 +39,12 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 	}
 
 	options = append(options, option.NewPage(0, 1))
-	list, err := s.List(ctx, location, options...)
+	objects, err := s.List(ctx, location, options...)
 	if err != nil {
 		return nil, err
 	}
-	return list[0], err
+	if len(objects) == 0 {
+		return nil, errors.Errorf("%v %v", location, doesNotExistsMessage)
+	}
+	return objects[0], err
 }

@@ -1,4 +1,4 @@
-## November 19 2019 0.9.0
+## November 19 2019 0.9.1
   * Optimize Exists, Get operation (to avoid expensive list operation)
   
 ## November 5 2019 0.7.4
