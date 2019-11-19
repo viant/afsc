@@ -1,3 +1,6 @@
+## November 19 2019 0.9.0
+  * Optimize Exists, Object operation (to avoid expensive list operation)
+  
 ## November 5 2019 0.7.4
   * Added upload storage.Object option (to reduce Object call)
   
