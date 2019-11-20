@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/http"
-	nhttp "net/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
+	nhttp "net/http"
 	"strings"
 )
 
