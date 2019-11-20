@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/http"
+	nhttp "net/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"io"
@@ -60,10 +61,22 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 		return reader, nil
 	}
 
-	response, err := call.Download()
+	var response *nhttp.Response
+	for i := 0; i < maxRetries; i++ {
+		response, err = call.Download()
+		if err == nil {
+			break
+		}
+		if !isRetryError(err) {
+			return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
+		}
+		sleepBeforeRetry()
+	}
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
 	}
+
 	if !http.IsStatusOK(response) {
 		return nil, fmt.Errorf("invalid status code: %v", response.StatusCode)
 	}

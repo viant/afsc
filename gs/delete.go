@@ -13,6 +13,8 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 	if err != nil {
 		return err
 	}
+
+
 	if len(infoList) > 1 {
 		for i := 1; i < len(infoList); i++ {
 			if err = s.Delete(ctx, path.Join(location, infoList[i].Name())); err != nil {
