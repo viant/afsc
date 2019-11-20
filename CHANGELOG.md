@@ -1,5 +1,6 @@
-## November 20 2019 0.9.2
-  * Added download retry on backend error
+## November 20 2019 0.9.3
+  * Added delete/download retry on backend error
+  
    
 ## November 19 2019 0.9.1
   * Optimize Exists, Get operation (to avoid expensive list operation)

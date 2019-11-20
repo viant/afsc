@@ -13,8 +13,6 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 	if err != nil {
 		return err
 	}
-
-
 	if len(infoList) > 1 {
 		for i := 1; i < len(infoList); i++ {
 			if err = s.Delete(ctx, path.Join(location, infoList[i].Name())); err != nil {
@@ -28,9 +26,14 @@ func (s *storager) Delete(ctx context.Context, location string) error {
 			return err
 		}
 	}
-
 	call := s.Objects.Delete(s.bucket, location)
 	call.Context(ctx)
-	err = call.Do()
+	for i := 0; i < maxRetries; i++ {
+		err = call.Do()
+		if !isRetryError(err) {
+			return err
+		}
+		sleepBeforeRetry()
+	}
 	return err
 }
