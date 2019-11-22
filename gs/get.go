@@ -9,6 +9,21 @@ import (
 	"strings"
 )
 
+
+
+//Get returns an object for supplied location
+func (s *storager) get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+	location = strings.Trim(location, "/")
+	objectCall := s.Objects.Get(s.bucket, location)
+	objectCall.Context(ctx)
+	object, err := objectCall.Do()
+	if object != nil {
+		return newFileInfo(object)
+	}
+	return nil, err
+}
+
+
 //Get returns an object for supplied location
 func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	location = strings.Trim(location, "/")

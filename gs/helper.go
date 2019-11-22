@@ -55,3 +55,17 @@ func isFallbackError(err error) bool {
 func sleepBeforeRetry() {
 	time.Sleep(3 * time.Second)
 }
+
+
+//isRetryError returns true if backend error
+func isNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	if apiError, ok := err.(*googleapi.Error); ok {
+		if apiError.Code == http.StatusNotFound {
+			return true
+		}
+	}
+	return false
+}

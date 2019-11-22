@@ -111,7 +111,8 @@ func newFileInfo(object *gstorage.Object) (os.FileInfo, error) {
 		object.Name = string(object.Name[:len(object.Name)-1])
 	}
 	_, name := path.Split(object.Name)
-	return file.NewInfo(name, int64(object.Size), mode, modified, isDir, object), nil
+	info := file.NewInfo(name, int64(object.Size), mode, modified, isDir, object)
+	return info, nil
 }
 
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
