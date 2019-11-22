@@ -10,8 +10,11 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync/atomic"
 	"time"
 )
+
+var listCounter uint64
 
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
@@ -135,6 +138,7 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 }
 
 func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
+	atomic.AddUint64(&listCounter, 1)
 	objects, err := call.Do()
 	if err != nil {
 		return 0, 0, err
@@ -152,4 +156,14 @@ func (s *storager) listObjects(ctx context.Context, location string, call *gstor
 		return files, folders, io.EOF
 	}
 	return files, folders, nil
+}
+
+
+//GetListCounter returns count of list operations
+func GetListCounter(reset bool) int {
+	result := atomic.LoadUint64(&listCounter)
+	if reset {
+		atomic.StoreUint64(&listCounter, 0)
+	}
+	return int(result)
 }
