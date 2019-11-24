@@ -71,13 +71,13 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 
 //Move moves data from source to dest
 func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
-	gsStorager, err := m.Storager(ctx, sourceURL, options)
+	s3Storager, err := m.Storager(ctx, sourceURL, options)
 	if err != nil {
 		return nil
 	}
-	rawStorager, ok := gsStorager.(*storager)
+	rawStorager, ok := s3Storager.(*storager)
 	if !ok {
-		return fmt.Errorf("expected: %T, but had: %T", rawStorager, gsStorager)
+		return fmt.Errorf("expected: %T, but had: %T", rawStorager, s3Storager)
 	}
 	sourcePath := url.Path(sourceURL)
 	destBucket := url.Host(destURL)

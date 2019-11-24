@@ -2,12 +2,14 @@ package gs
 
 import (
 	"context"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 	"path"
 	"strings"
 )
 
 //Delete removes an resource
-func (s *storager) Delete(ctx context.Context, location string) (err error) {
+func (s *storager) Delete(ctx context.Context, location string, options ...storage.Option) (err error) {
 	location = strings.Trim(location, "/")
 	if location == "" {
 		call := s.Buckets.Delete(s.bucket)
@@ -16,12 +18,15 @@ func (s *storager) Delete(ctx context.Context, location string) (err error) {
 		return err
 	}
 
-
 	call := s.Objects.Delete(s.bucket, location)
 	call.Context(ctx)
 	for i := 0; i < maxRetries; i++ {
 		err = call.Do()
 		if isNotFound(err) {
+			objectKind := &option.ObjectKind{}
+			if _, ok := option.Assign(options, objectKind); ok && objectKind.File {
+				return err
+			}
 			notFound := err
 			infoList, err := s.List(ctx, location)
 			if err != nil {

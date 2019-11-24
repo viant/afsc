@@ -159,7 +159,6 @@ func (s *storager) listObjects(ctx context.Context, location string, call *gstor
 	return files, folders, nil
 }
 
-
 //GetListCounter returns count of list operations
 func GetListCounter(reset bool) int {
 	result := atomic.LoadUint64(&listCounter)

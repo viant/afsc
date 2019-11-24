@@ -25,3 +25,10 @@ func isFallbackError(err error) bool {
 	errorMessage := strings.ToLower(err.Error())
 	return strings.Contains(errorMessage, badRequestFragment) || strings.Contains(errorMessage, encryptionFragment)
 }
+
+func isNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), noSuchKeyMessage) || strings.Contains(err.Error(), doesNotExistsMessage)
+}

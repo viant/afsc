@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
 	"path"
@@ -24,8 +25,12 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
-	objectInfo, err := s.get(ctx, sourcePath)
+	objectInfo, err := s.get(ctx, sourcePath, options)
 	if isNotFound(err) {
+		objectOpt := &option.ObjectKind{}
+		if _, ok := option.Assign(options, objectOpt); ok && objectOpt.File {
+			return err
+		}
 		infoList, err := s.List(ctx, sourcePath)
 		if err != nil {
 			return err

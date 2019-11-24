@@ -2,13 +2,13 @@ package gs
 
 import (
 	"context"
-	"strings"
+	"github.com/viant/afs/storage"
 )
 
 //Exists returns true if object exists
-func (s *storager) Exists(ctx context.Context, location string) (bool, error) {
+func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
 	object, err := s.Get(ctx, location)
-	if err != nil && strings.Contains(strings.ToLower(err.Error()), "not found") {
+	if isNotFound(err) {
 		err = nil
 	}
 	return object != nil, err

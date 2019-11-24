@@ -56,7 +56,6 @@ func sleepBeforeRetry() {
 	time.Sleep(3 * time.Second)
 }
 
-
 //isRetryError returns true if backend error
 func isNotFound(err error) bool {
 	if err == nil {
@@ -67,5 +66,5 @@ func isNotFound(err error) bool {
 			return true
 		}
 	}
-	return false
+	return strings.Contains(err.Error(), notFound)
 }
