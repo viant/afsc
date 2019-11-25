@@ -46,9 +46,12 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 		}
 		return nil
 	}
+	if err != nil {
+		return  err
+	}
 	info, ok := objectInfo.(*file.Info)
 	if !ok {
-		return fmt.Errorf("unable move,  expected: %T, but had: %v", info, objectInfo)
+		return fmt.Errorf("unable copy,  expected: %T, but had: %v", info, objectInfo)
 	}
 	object, _ := info.Source.(*gstorage.Object)
 	object.Name = destPath

@@ -47,6 +47,9 @@ func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath st
 		}
 		return nil
 	}
+	if err != nil {
+		return  err
+	}
 	info, ok := objectInfo.(*file.Info)
 	if !ok {
 		return fmt.Errorf("unable move,  expected: %T, but had: %v", info, objectInfo)

@@ -21,7 +21,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	for i := 0; i < maxRetries; i++ {
 		files, err = s.listFiles(ctx, location, options)
 		if !isRetryError(err) {
-			return files, err
+			break
 		}
 		sleepBeforeRetry()
 	}
@@ -38,26 +38,26 @@ func (s *storager) listFiles(ctx context.Context, location string, options []sto
 }
 
 //List list directory, returns a file info
-func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
+func (s *storager) list(ctx context.Context, location string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	var err error
 	call := s.Objects.List(s.bucket)
 	if page.MaxResult() > 0 {
 		call.MaxResults(page.MaxResult())
 	}
 
-	if parent == "" {
+	if location == "" {
 		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
 		if matcher("", info) {
 			*result = append(*result, info)
 		}
 	}
 
-	files, folders, err := s.listPage(ctx, call, parent, result, page, matcher)
+	files, folders, err := s.listPage(ctx, call, location, result, page, matcher)
 	if err != nil {
 		return err
 	}
 	if folders == 1 && files == 0 {
-		_, _, err = s.listPage(ctx, call, parent+"/", result, page, matcher)
+		_, _, err = s.listPage(ctx, call, location+"/", result, page, matcher)
 	}
 	return err
 }
@@ -115,6 +115,22 @@ func newFileInfo(object *gstorage.Object) (os.FileInfo, error) {
 	return info, nil
 }
 
+func (s *storager) addFile(parent string, info os.FileInfo, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
+	if !matcher(parent, info) {
+		return nil
+	}
+	page.Increment()
+	if page.ShallSkip() {
+		return nil
+	}
+	*result = append(*result, info)
+	if page.HasReachedLimit() {
+		return io.EOF
+	}
+	return nil
+}
+
+
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if items := objects.Items; len(items) > 0 {
 		for i := range items {
@@ -122,21 +138,14 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 			if err != nil {
 				return err
 			}
-			if !matcher(parent, info) {
-				continue
-			}
-			page.Increment()
-			if page.ShallSkip() {
-				continue
-			}
-			*result = append(*result, info)
-			if page.HasReachedLimit() {
-				return io.EOF
+			if err = s.addFile(parent, info, result, page, matcher);err != nil {
+				return err
 			}
 		}
 	}
 	return nil
 }
+
 
 func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
 	atomic.AddUint64(&listCounter, 1)
