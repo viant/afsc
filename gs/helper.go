@@ -12,7 +12,7 @@ const notFound = "Not Found"
 const storageClassFragment = "storageclass"
 const encryptionFragment = "encryption"
 const backendError = "backendError"
-const maxRetries = 4
+
 
 //isRetryError returns true if backend error
 func isRetryError(err error) bool {
@@ -57,7 +57,7 @@ func sleepBeforeRetry(retry *base.Retry) {
 	time.Sleep(retry.Pause())
 }
 
-//isRetryError returns true if backend error
+//isRetryError returns true if not found
 func isNotFound(err error) bool {
 	if err == nil {
 		return false
