@@ -3,6 +3,7 @@ package gs
 import (
 	"context"
 	"fmt"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -12,12 +13,13 @@ import (
 )
 
 func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
+	retry := base.NewRetry()
 	for i := 0; i < maxRetries; i++ {
 		err = s.move(ctx, sourcePath, destBucket, destPath, options)
 		if !isRetryError(err) {
 			return err
 		}
-		sleepBeforeRetry()
+		sleepBeforeRetry(retry)
 	}
 	return err
 }
@@ -48,7 +50,7 @@ func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath st
 		return nil
 	}
 	if err != nil {
-		return  err
+		return err
 	}
 	info, ok := objectInfo.(*file.Info)
 	if !ok {

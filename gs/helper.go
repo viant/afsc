@@ -1,6 +1,7 @@
 package gs
 
 import (
+	"github.com/viant/afs/base"
 	"google.golang.org/api/googleapi"
 	"net/http"
 	"strings"
@@ -11,7 +12,7 @@ const notFound = "Not Found"
 const storageClassFragment = "storageclass"
 const encryptionFragment = "encryption"
 const backendError = "backendError"
-const maxRetries = 3
+const maxRetries = 4
 
 //isRetryError returns true if backend error
 func isRetryError(err error) bool {
@@ -52,8 +53,8 @@ func isFallbackError(err error) bool {
 	return strings.Contains(errorMessage, storageClassFragment) || strings.Contains(errorMessage, encryptionFragment)
 }
 
-func sleepBeforeRetry() {
-	time.Sleep(3 * time.Second)
+func sleepBeforeRetry(retry *base.Retry) {
+	time.Sleep(retry.Pause())
 }
 
 //isRetryError returns true if backend error

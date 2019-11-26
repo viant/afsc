@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -18,12 +19,13 @@ var listCounter uint64
 
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
+	retry := base.NewRetry()
 	for i := 0; i < maxRetries; i++ {
 		files, err = s.listFiles(ctx, location, options)
 		if !isRetryError(err) {
 			break
 		}
-		sleepBeforeRetry()
+		sleepBeforeRetry(retry)
 	}
 	return files, err
 }
@@ -130,7 +132,6 @@ func (s *storager) addFile(parent string, info os.FileInfo, result *[]os.FileInf
 	return nil
 }
 
-
 func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorage.Objects, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	if items := objects.Items; len(items) > 0 {
 		for i := range items {
@@ -138,14 +139,13 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 			if err != nil {
 				return err
 			}
-			if err = s.addFile(parent, info, result, page, matcher);err != nil {
+			if err = s.addFile(parent, info, result, page, matcher); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
 }
-
 
 func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
 	atomic.AddUint64(&listCounter, 1)

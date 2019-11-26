@@ -14,12 +14,13 @@ import (
 )
 
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {
+	retry := base.NewRetry()
 	for i := 0; i < maxRetries; i++ {
 		reader, err = s.download(ctx, location, options)
 		if !isRetryError(err) {
 			return reader, err
 		}
-		sleepBeforeRetry()
+		sleepBeforeRetry(retry)
 	}
 	return reader, err
 }
@@ -62,6 +63,7 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 	}
 
 	var response *nhttp.Response
+	retry := base.NewRetry()
 	for i := 0; i < maxRetries; i++ {
 		response, err = call.Download()
 		if err == nil {
@@ -70,7 +72,7 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 		if !isRetryError(err) {
 			return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
 		}
-		sleepBeforeRetry()
+		sleepBeforeRetry(retry)
 	}
 
 	if err != nil {

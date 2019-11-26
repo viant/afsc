@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/viant/afs/base"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -27,12 +28,13 @@ func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, 
 
 //Upload uploads content
 func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) (err error) {
+	retry := base.NewRetry()
 	for i := 0; i < maxRetries; i++ {
 		err = s.upload(ctx, destination, mode, reader, options)
 		if !isRetryError(err) {
 			return err
 		}
-		sleepBeforeRetry()
+		sleepBeforeRetry(retry)
 	}
 	return err
 }

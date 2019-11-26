@@ -37,7 +37,7 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 		return nil
 	}
 	if err != nil {
-		return  err
+		return err
 	}
 	_, err = s.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
