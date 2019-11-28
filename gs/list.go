@@ -61,13 +61,21 @@ func (s *storager) list(ctx context.Context, location string, result *[]os.FileI
 	if name == "" {
 		name = "/"
 	}
+
 	info := file.NewInfo(name, int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
-	if matcher("", info) {
-		*result = append(*result, info)
+	if location == "" {
+		if matcher("", info) {
+			*result = append(*result, info)
+		}
 	}
 	files, folders, err := s.listPage(ctx, call, location, result, page, matcher)
 	if err == nil && files == 0 && folders == 0 {
 		err = errors.Errorf("%v %v", location, notFound)
+	}
+	if len(*result) > 0 {
+		if (*result)[0].Name() != info.Name() {
+			*result = append([]os.FileInfo{info}, *result...)
+		}
 	}
 	return err
 }
