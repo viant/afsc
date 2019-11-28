@@ -2,7 +2,6 @@ package gs
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
@@ -70,7 +69,7 @@ func (s *storager) list(ctx context.Context, location string, result *[]os.FileI
 	}
 	files, folders, err := s.listPage(ctx, call, location, result, page, matcher)
 	if err == nil && files == 0 && folders == 0 {
-		err = errors.Errorf("%v %v", location, notFound)
+		_, _, err = s.listPage(ctx, call, strings.Trim(location, "/"), result, page, matcher)
 	}
 	if len(*result) > 0 {
 		if (*result)[0].Name() != info.Name() {
