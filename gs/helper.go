@@ -13,7 +13,6 @@ const storageClassFragment = "storageclass"
 const encryptionFragment = "encryption"
 const backendError = "backendError"
 
-
 //isRetryError returns true if backend error
 func isRetryError(err error) bool {
 	if err == nil {

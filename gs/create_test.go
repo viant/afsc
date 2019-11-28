@@ -26,14 +26,14 @@ func TestStorager_Create(t *testing.T) {
 	}{
 		{
 			description: "single asset create",
-			URL:         fmt.Sprintf("gs://%v/", TestBucket),
+			URL:         fmt.Sprintf("gs://%v/001_create/", TestBucket),
 			assets: []*asset.Resource{
 				asset.NewFile("asset1.txt", []byte("test is test"), 0655),
 			},
 		},
 		{
 			description: "multi asset create",
-			URL:         fmt.Sprintf("gs://%v/", TestBucket),
+			URL:         fmt.Sprintf("gs://%v/002_create/", TestBucket),
 			assets: []*asset.Resource{
 				asset.NewFile("folder1/asset1.txt", []byte("test is test"), 0655),
 				asset.NewFile("folder1/asset2.txt", []byte("test is test"), 0655),
@@ -54,7 +54,7 @@ func TestStorager_Create(t *testing.T) {
 			assert.Nil(t, err, useCase.description)
 		}
 		actuals, err := asset.Load(mgr, useCase.URL)
-		if !assert.Nil(t, err) {
+		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}
 		assert.Nil(t, err, useCase.description)

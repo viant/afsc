@@ -6,11 +6,10 @@ import (
 	"os"
 )
 
-
 var maxRetries = 4
 
 func init() {
-	if max := os.Getenv("GS_MAX_RETRIES");max != "" {
+	if max := os.Getenv("GS_MAX_RETRIES"); max != "" {
 		maxRetries = toolbox.AsInt(max)
 	}
 	afs.GetRegistry().Register(Scheme, Provider)

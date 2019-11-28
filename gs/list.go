@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
@@ -33,6 +34,15 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 //List list directory or returns a file info
 func (s *storager) listFiles(ctx context.Context, location string, options []storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
+
+	if location != "" {
+		if info, _ := s.get(ctx, location, options); info != nil {
+			return []os.FileInfo{info}, nil
+		}
+	}
+	if location != "" {
+		location += "/"
+	}
 	var result = make([]os.FileInfo, 0)
 	matcher, page := option.GetListOptions(options)
 	err := s.list(ctx, location, &result, page, matcher)
@@ -47,19 +57,17 @@ func (s *storager) list(ctx context.Context, location string, result *[]os.FileI
 		call.MaxResults(page.MaxResult())
 	}
 
-	if location == "" {
-		info := file.NewInfo("/", int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
-		if matcher("", info) {
-			*result = append(*result, info)
-		}
+	_, name := path.Split(strings.Trim(location, "/"))
+	if name == "" {
+		name = "/"
 	}
-
+	info := file.NewInfo(name, int64(0), file.DefaultDirOsMode, time.Now(), true, nil)
+	if matcher("", info) {
+		*result = append(*result, info)
+	}
 	files, folders, err := s.listPage(ctx, call, location, result, page, matcher)
-	if err != nil {
-		return err
-	}
-	if folders == 1 && files == 0 {
-		_, _, err = s.listPage(ctx, call, location+"/", result, page, matcher)
+	if err == nil && files == 0 && folders == 0 {
+		err = errors.Errorf("%v %v", location, notFound)
 	}
 	return err
 }
