@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"fmt"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
@@ -10,12 +11,17 @@ import (
 	"io"
 	"os"
 	"path"
+	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
 
 var listCounter uint64
+var callers = map[string]int {}
+var mux = &sync.Mutex{}
+
 
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
@@ -162,8 +168,37 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 	return nil
 }
 
+//DiscoverCaller returns the first matched caller info
+func DiscoverCaller(offset, maxDepth int, ignorePkgs ...string) (string, string, int) {
+	var callerPointer = make([]uintptr, maxDepth) // at least 1 entry needed
+	var caller *runtime.Func
+	var filename string
+	var line int
+	outer: for i := offset; i < maxDepth; i++ {
+		runtime.Callers(i, callerPointer)
+		caller = runtime.FuncForPC(callerPointer[0])
+		filename, line = caller.FileLine(callerPointer[0])
+		pkg, _ := path.Split(filename)
+		pkg = strings.Trim(pkg, "/")
+		pkg = strings.Replace(pkg, "/", ".", len(pkg))
+		for _, ignore := range ignorePkgs {
+			if strings.Contains(pkg, ignore) {
+				continue outer
+			}
+		}
+		break
+	}
+	callerName := caller.Name()
+	dotPosition := strings.LastIndex(callerName, ".")
+	return filename, callerName[dotPosition+1:], line
+}
+
 func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
 	atomic.AddUint64(&listCounter, 1)
+	f, n, l := DiscoverCaller(3, 20,  ".afsc", ".afs")
+	mux.Lock()
+	callers[fmt.Sprintf("%v:%v line: %v", f,n,l)]++
+	mux.Unlock()
 	objects, err := call.Do()
 	if err != nil {
 		return 0, 0, err
@@ -190,4 +225,19 @@ func GetListCounter(reset bool) int {
 		atomic.StoreUint64(&listCounter, 0)
 	}
 	return int(result)
+}
+
+
+//GetListCounter returns count of list operations
+func GetListCaller(reset bool) []string {
+	mux.Lock()
+	defer mux.Unlock()
+	var result = make([]string, 0)
+	for k, v := range callers {
+		result = append(result, fmt.Sprintf("%v -> %v", k, v))
+	}
+	if reset {
+		callers = make(map[string]int)
+	}
+	return result
 }
