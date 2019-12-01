@@ -7,7 +7,7 @@ import (
 
 //Exists returns true if object exists
 func (s *storager) Exists(ctx context.Context, location string, options ...storage.Option) (bool, error) {
-	object, err := s.Get(ctx, location)
+	object, err := s.Get(ctx, location, options...)
 	if isNotFound(err) {
 		err = nil
 	}

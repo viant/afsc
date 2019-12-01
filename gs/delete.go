@@ -29,6 +29,7 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 				return err
 			}
 			notFound := err
+
 			infoList, err := s.List(ctx, location)
 			if err != nil {
 				return err
