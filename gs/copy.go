@@ -30,7 +30,7 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 	objectInfo, err := s.get(ctx, sourcePath, options)
 	if isNotFound(err) {
 		objectOpt := &option.ObjectKind{}
-		if _, ok := option.Assign(options, objectOpt); ok && objectOpt.File {
+		if _, ok := option.Assign(options, &objectOpt); ok && objectOpt.File {
 			return err
 		}
 		infoList, err := s.List(ctx, sourcePath)

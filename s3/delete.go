@@ -16,7 +16,7 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 	})
 	if isNotFound(err) {
 		objectKind := &option.ObjectKind{}
-		if _, ok := option.Assign(options, objectKind); ok && objectKind.File {
+		if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
 			return err
 		}
 	}

@@ -18,7 +18,6 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 		err = call.Do()
 		return err
 	}
-
 	call := s.Objects.Delete(s.bucket, location)
 	call.Context(ctx)
 	retry := base.NewRetry()
@@ -26,7 +25,7 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 		err = call.Do()
 		if isNotFound(err) {
 			objectKind := &option.ObjectKind{}
-			if _, ok := option.Assign(options, objectKind); ok && objectKind.File {
+			if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
 				return err
 			}
 			notFound := err

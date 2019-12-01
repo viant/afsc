@@ -1,6 +1,5 @@
-## November 20 2019 0.9.3
-  * Added delete/download retry on backend error
-  
+## December 1 2019 0.10.8
+  * Patched object kind support  
    
 ## November 19 2019 0.9.1
   * Optimize Exists, Get operation (to avoid expensive list operation)

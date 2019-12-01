@@ -29,7 +29,7 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 	}
 	if isNotFound(err) {
 		objectOpt := &option.ObjectKind{}
-		if _, ok := option.Assign(options, objectOpt); ok && objectOpt.File {
+		if _, ok := option.Assign(options, &objectOpt); ok && objectOpt.File {
 			return nil, err
 		}
 	}

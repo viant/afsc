@@ -53,7 +53,7 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 	}
 	if isNotFound(err) {
 		objectKind := &option.ObjectKind{}
-		if _, ok := option.Assign(options, objectKind); ok && objectKind.File {
+		if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
 			return nil, err
 		}
 	}
