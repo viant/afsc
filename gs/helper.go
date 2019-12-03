@@ -22,9 +22,12 @@ func isRetryError(err error) bool {
 		if apiError.Code == http.StatusServiceUnavailable {
 			return true
 		}
+		if apiError.Code == http.StatusGatewayTimeout {
+			return true
+		}
 	}
 	message := err.Error()
-	return strings.Contains(message, backendError)
+	return strings.Contains(message, backendError) || strings.Contains(message, "connection reset")
 }
 
 func isBucketNotFound(err error) bool {
