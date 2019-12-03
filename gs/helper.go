@@ -28,17 +28,13 @@ func isRetryError(err error) bool {
 	}
 
 	if apiError, ok := err.(*googleapi.Error); ok {
-		mux.Lock()
-		retryErrors[apiError.Code]++
-		mux.Unlock()
-		if apiError.Code == http.StatusServiceUnavailable {
-			return true
-		}
-		if apiError.Code == http.StatusGatewayTimeout {
+		if apiError.Code == http.StatusServiceUnavailable || apiError.Code == http.StatusGatewayTimeout  {
+			mux.Lock()
+			retryErrors[apiError.Code]++
+			mux.Unlock()
 			return true
 		}
 	}
-
 	message := err.Error()
 	if strings.Contains(message, "connection reset") {
 		mux.Lock()
@@ -49,7 +45,7 @@ func isRetryError(err error) bool {
 
 	if  strings.Contains(message, backendError) {
 		mux.Lock()
-		retryErrors[connectionResetCode]++
+		retryErrors[backendErrorCode]++
 		mux.Unlock()
 		return true
 	}
