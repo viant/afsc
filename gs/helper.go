@@ -17,7 +17,7 @@ const backendErrorCode = 10
 const connectionResetCode = 11
 
 
-var errors = make(map[int]int)
+var retryErrors = make(map[int]int)
 var mux = &sync.Mutex{}
 
 
@@ -29,7 +29,7 @@ func isRetryError(err error) bool {
 
 	if apiError, ok := err.(*googleapi.Error); ok {
 		mux.Lock()
-		errors[apiError.Code]++
+		retryErrors[apiError.Code]++
 		mux.Unlock()
 		if apiError.Code == http.StatusServiceUnavailable {
 			return true
@@ -42,14 +42,14 @@ func isRetryError(err error) bool {
 	message := err.Error()
 	if strings.Contains(message, "connection reset") {
 		mux.Lock()
-		errors[connectionResetCode]++
+		retryErrors[connectionResetCode]++
 		mux.Unlock()
 		return true
 	}
 
 	if  strings.Contains(message, backendError) {
 		mux.Lock()
-		errors[connectionResetCode]++
+		retryErrors[connectionResetCode]++
 		mux.Unlock()
 		return true
 	}
@@ -100,10 +100,10 @@ func isNotFound(err error) bool {
 
 
 func GetRetryCodes(reset bool) map[int]int {
-	result :=  errors
+	result :=  retryErrors
 	if reset {
 		mux.Lock()
-		errors = make(map[int]int)
+		retryErrors = make(map[int]int)
 		mux.Unlock()
 	}
 	return result
