@@ -17,7 +17,6 @@ import (
 
 var listCounter uint64
 
-
 //List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
 	retry := base.NewRetry()
@@ -157,8 +156,6 @@ func (s *storager) addFiles(ctx context.Context, parent string, objects *gstorag
 	return nil
 }
 
-
-
 func (s *storager) listObjects(ctx context.Context, location string, call *gstorage.ObjectsListCall, infoList *[]os.FileInfo, page *option.Page, matcher option.Match) (int, int, error) {
 	atomic.AddUint64(&listCounter, 1)
 	objects, err := call.Do()
@@ -188,4 +185,3 @@ func GetListCounter(reset bool) int {
 	}
 	return int(result)
 }
-

@@ -28,15 +28,7 @@ func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, 
 
 //Upload uploads content
 func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) (err error) {
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		err = s.upload(ctx, destination, mode, reader, options)
-		if !isRetryError(err) {
-			return err
-		}
-		sleepBeforeRetry(retry)
-	}
-	return err
+	return s.upload(ctx, destination, mode, reader, options)
 }
 
 //Upload uploads content
@@ -55,13 +47,13 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	key := &option.AES256Key{}
 	generation := &option.Generation{}
 	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
-
+	var err error
+	var content []byte
 	if _, assigned := option.Assign(options, &generation); !assigned {
 		generation = nil
 	}
-
 	if !checksum.Skip {
-		content, err := ioutil.ReadAll(reader)
+		content, err = ioutil.ReadAll(reader)
 		if err != nil {
 			return err
 		}
@@ -75,7 +67,6 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 			return err
 		}
 	}
-
 	if generation != nil {
 		if generation.WhenMatch {
 			call.IfGenerationMatch(generation.Generation)
@@ -88,10 +79,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		sizer := reader.(storage.Sizer)
 		call = call.ResumableMedia(ctx, readerAt, sizer.Size(), detectContentType(destination))
 	} else {
-
 		call.Media(reader)
 	}
-	gobject, err := call.Do()
+	gobject, err = s.uploadWithRetires(ctx, call, content)
 	if isBucketNotFound(err) {
 		if err = s.createBucket(ctx); err != nil {
 			return err
@@ -114,6 +104,19 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), gobject.Size)
 	}
 	return err
+}
+
+func (s *storager) uploadWithRetires(ctx context.Context, call *gstorage.ObjectsInsertCall, data []byte) (object *gstorage.Object, err error) {
+	retry := base.NewRetry()
+	for i := 0; i < maxRetries; i++ {
+		object, err = call.Do()
+		if !isRetryError(err) || len(data) == 0 {
+			return object, err
+		}
+		call.Media(bytes.NewReader(data))
+		sleepBeforeRetry(retry)
+	}
+	return object, err
 }
 
 var textContentTypes = map[string]bool{

@@ -16,10 +16,8 @@ const backendError = "backendError"
 const backendErrorCode = 10
 const connectionResetCode = 11
 
-
 var retryErrors = make(map[int]int)
 var mux = &sync.Mutex{}
-
 
 //isRetryError returns true if backend error
 func isRetryError(err error) bool {
@@ -28,7 +26,7 @@ func isRetryError(err error) bool {
 	}
 
 	if apiError, ok := err.(*googleapi.Error); ok {
-		if apiError.Code == http.StatusServiceUnavailable || apiError.Code == http.StatusGatewayTimeout  {
+		if apiError.Code == http.StatusServiceUnavailable || apiError.Code == http.StatusGatewayTimeout {
 			mux.Lock()
 			retryErrors[apiError.Code]++
 			mux.Unlock()
@@ -43,7 +41,7 @@ func isRetryError(err error) bool {
 		return true
 	}
 
-	if  strings.Contains(message, backendError) {
+	if strings.Contains(message, backendError) {
 		mux.Lock()
 		retryErrors[backendErrorCode]++
 		mux.Unlock()
@@ -94,9 +92,8 @@ func isNotFound(err error) bool {
 	return strings.Contains(err.Error(), notFound)
 }
 
-
 func GetRetryCodes(reset bool) map[int]int {
-	result :=  retryErrors
+	result := retryErrors
 	if reset {
 		mux.Lock()
 		retryErrors = make(map[int]int)
