@@ -4,6 +4,7 @@ import (
 	"github.com/viant/afs/base"
 	"google.golang.org/api/googleapi"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -90,6 +91,18 @@ func isNotFound(err error) bool {
 		}
 	}
 	return strings.Contains(err.Error(), notFound)
+}
+
+func isProxyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(*url.Error)
+	if ok {
+		return true
+	}
+
+	return strings.Contains(err.Error(), "proxy")
 }
 
 func GetRetryCodes(reset bool) map[int]int {

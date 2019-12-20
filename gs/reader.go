@@ -1,17 +1,21 @@
 package gs
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"google.golang.org/api/storage/v1"
 	"io"
+	"net/http"
 )
 
 type reader struct {
-	from int64
-	size int
-	call *storage.ObjectsGetCall
+	from     int64
+	size     int
+	call     *storage.ObjectsGetCall
+	storager *storager
+	ctx      context.Context
 }
 
 func (t *reader) Seek(offset int64, whence int) (int64, error) {
@@ -35,7 +39,13 @@ func (t *reader) Read(dest []byte) (int, error) {
 		to = t.size
 	}
 	t.call.Header().Set(base.RangeHeader, fmt.Sprintf(base.RangeHeaderTmpl, from, to))
-	response, err := t.call.Download()
+
+	var response *http.Response
+	var err error
+	err = runWithRetries(t.ctx, func() error {
+		response, err = t.call.Download()
+		return err
+	}, t.storager)
 	if err != nil {
 		return 0, err
 	}
@@ -58,9 +68,11 @@ func (t *reader) Read(dest []byte) (int, error) {
 }
 
 //NewReadSeeker create a reader seeker
-func NewReadSeeker(call *storage.ObjectsGetCall, size int) io.ReadSeeker {
+func NewReadSeeker(ctx context.Context, storager *storager, call *storage.ObjectsGetCall, size int) io.ReadSeeker {
 	return &reader{
-		call: call,
-		size: size,
+		ctx:      ctx,
+		storager: storager,
+		call:     call,
+		size:     size,
 	}
 }

@@ -115,6 +115,18 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	return result, nil
 }
 
+func (s *storager) disableProxy(ctx context.Context) error {
+	s.client.disableProxy()
+	gcpOptions := make(ClientOptions, 0)
+	gcpOptions = append(gcpOptions, goption.WithHTTPClient(s.client.Client))
+	service, err := gstorage.NewService(ctx, gcpOptions...)
+	if err != nil {
+		return err
+	}
+	s.Service = service
+	return nil
+}
+
 //NewStorager returns new storager
 func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	return newStorager(ctx, baseURL, options...)

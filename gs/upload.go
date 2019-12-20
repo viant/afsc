@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/viant/afs/base"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -82,12 +81,14 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		call.Media(reader)
 	}
 	gobject, err = s.uploadWithRetires(ctx, call, content)
+
 	if isBucketNotFound(err) {
 		if err = s.createBucket(ctx); err != nil {
 			return err
 		}
 		gobject, err = call.Do()
 	}
+
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload: gs://%v/%v", s.bucket, destination)
 		return err
@@ -107,15 +108,16 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 }
 
 func (s *storager) uploadWithRetires(ctx context.Context, call *gstorage.ObjectsInsertCall, data []byte) (object *gstorage.Object, err error) {
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		object, err = call.Do()
-		if !isRetryError(err) || len(data) == 0 {
-			return object, err
-		}
-		call.Media(bytes.NewReader(data))
-		sleepBeforeRetry(retry)
+	if len(data) == 0 { //no data - thus no retries once reader is exhausted
+		return call.Do()
 	}
+	err = runWithRetries(ctx, func() error {
+		object, err = call.Do()
+		if err != nil {
+			call.Media(bytes.NewReader(data))
+		}
+		return err
+	}, s)
 	return object, err
 }
 

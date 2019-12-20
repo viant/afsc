@@ -3,7 +3,6 @@ package gs
 import (
 	"context"
 	"fmt"
-	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -12,16 +11,8 @@ import (
 	"strings"
 )
 
-func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		err = s.copy(ctx, sourcePath, destBucket, destPath, options)
-		if !isRetryError(err) {
-			return err
-		}
-		sleepBeforeRetry(retry)
-	}
-	return err
+func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+	return s.copy(ctx, sourcePath, destBucket, destPath, options)
 }
 
 func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {
@@ -59,6 +50,9 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 	object.Name = destPath
 	call := s.Objects.Copy(s.bucket, sourcePath, destBucket, destPath, object)
 	call.Context(ctx)
-	_, err = call.Do()
-	return err
+
+	return runWithRetries(ctx, func() error {
+		_, err = call.Do()
+		return err
+	}, s)
 }

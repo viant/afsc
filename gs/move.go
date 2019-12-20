@@ -3,7 +3,6 @@ package gs
 import (
 	"context"
 	"fmt"
-	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -12,16 +11,8 @@ import (
 	"strings"
 )
 
-func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) (err error) {
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		err = s.move(ctx, sourcePath, destBucket, destPath, options)
-		if !isRetryError(err) {
-			return err
-		}
-		sleepBeforeRetry(retry)
-	}
-	return err
+func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+	return s.move(ctx, sourcePath, destBucket, destPath, options)
 }
 
 func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath string, options []storage.Option) error {
@@ -60,7 +51,10 @@ func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath st
 	object.Name = destPath
 	call := s.Objects.Rewrite(s.bucket, sourcePath, destBucket, destPath, object)
 	call.Context(ctx)
-	_, err = call.Do()
+	err = runWithRetries(ctx, func() error {
+		_, err = call.Do()
+		return err
+	}, s)
 	if err == nil {
 		err = s.Delete(ctx, sourcePath)
 	}

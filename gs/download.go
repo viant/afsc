@@ -14,14 +14,7 @@ import (
 )
 
 func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		reader, err = s.download(ctx, location, options)
-		if !isRetryError(err) {
-			return reader, err
-		}
-		sleepBeforeRetry(retry)
-	}
+	reader, err = s.download(ctx, location, options)
 	return reader, err
 }
 
@@ -35,12 +28,13 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 	key := &option.AES256Key{}
 	stream := &option.Stream{}
 	option.Assign(options, &md5, &crc, &key, &stream)
+
 	if len(key.Key) != 0 {
 		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
 		}
 	}
-	object, err := call.Do()
+	object, err := s.getObject(ctx, location, options)
 	if err == nil {
 		if err = md5.Decode(object.Md5Hash); err == nil {
 			err = crc.Decode(object.Crc32c)
@@ -49,7 +43,6 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 	if err != nil {
 		return nil, err
 	}
-
 	if len(key.Key) != 0 {
 		if err := SetCustomKeyHeader(key, call.Header()); err != nil {
 			return nil, err
@@ -57,24 +50,16 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 	}
 	if stream.PartSize > 0 {
 		stream.Size = int(object.Size)
-		readSeeker := NewReadSeeker(call, int(object.Size))
+		readSeeker := NewReadSeeker(ctx, s, call, int(object.Size))
 		reader := base.NewStreamReader(stream, readSeeker)
 		return reader, nil
 	}
 
 	var response *nhttp.Response
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
+	err = runWithRetries(ctx, func() error {
 		response, err = call.Download()
-		if err == nil {
-			break
-		}
-		if !isRetryError(err) {
-			return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
-		}
-		sleepBeforeRetry(retry)
-	}
-
+		return err
+	}, s)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
 	}

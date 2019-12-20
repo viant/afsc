@@ -5,20 +5,37 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
+	gstorage "google.golang.org/api/storage/v1"
 	"os"
 	"strings"
 )
 
 //Get returns an object for supplied location
 func (s *storager) get(ctx context.Context, location string, options []storage.Option) (os.FileInfo, error) {
-	location = strings.Trim(location, "/")
-	objectCall := s.Objects.Get(s.bucket, location)
-	objectCall.Context(ctx)
-	object, err := objectCall.Do()
+	object, err := s.getObject(ctx, location, options)
 	if object != nil {
 		return newFileInfo(object)
 	}
 	return nil, err
+}
+
+//Get returns an object for supplied location
+func (s *storager) getObject(ctx context.Context, location string, options []storage.Option) (object *gstorage.Object, err error) {
+	location = strings.Trim(location, "/")
+	objectCall := s.Objects.Get(s.bucket, location)
+	objectCall.Context(ctx)
+	key := &option.AES256Key{}
+	option.Assign(options, &key)
+	if len(key.Key) != 0 {
+		if err := SetCustomKeyHeader(key, objectCall.Header()); err != nil {
+			return nil, err
+		}
+	}
+	err = runWithRetries(ctx, func() error {
+		object, err = objectCall.Do()
+		return err
+	}, s)
+	return object, err
 }
 
 //Get returns an object for supplied location

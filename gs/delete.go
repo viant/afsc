@@ -2,7 +2,6 @@ package gs
 
 import (
 	"context"
-	"github.com/viant/afs/base"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"path"
@@ -20,35 +19,30 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 	}
 	call := s.Objects.Delete(s.bucket, location)
 	call.Context(ctx)
-	retry := base.NewRetry()
-	for i := 0; i < maxRetries; i++ {
-		err = call.Do()
-		if isNotFound(err) {
-			objectKind := &option.ObjectKind{}
-			if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
-				return err
-			}
-			notFound := err
+	err = runWithRetries(ctx, func() error {
+		return call.Do()
+	}, s)
 
-			infoList, err := s.List(ctx, location)
-			if err != nil {
-				return err
-			}
-			if len(infoList) > 1 {
-				for i := 1; i < len(infoList); i++ {
-					if err = s.Delete(ctx, path.Join(location, infoList[i].Name())); err != nil {
-						return err
-					}
-				}
-				return nil
-			} else {
-				return notFound
-			}
-		}
-		if !isRetryError(err) {
+	if isNotFound(err) {
+		objectKind := &option.ObjectKind{}
+		if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
 			return err
 		}
-		sleepBeforeRetry(retry)
+		notFound := err
+		infoList, err := s.List(ctx, location)
+		if err != nil {
+			return err
+		}
+		if len(infoList) > 1 {
+			for i := 1; i < len(infoList); i++ {
+				if err = s.Delete(ctx, path.Join(location, infoList[i].Name())); err != nil {
+					return err
+				}
+			}
+			return nil
+		} else {
+			return notFound
+		}
 	}
 	return err
 }

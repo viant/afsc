@@ -1,3 +1,7 @@
+## December 20 2019 0.12.0
+  * Added Google Clod Storage http proxy support
+  * Refactored retries 
+  
 ## December 1 2019 0.10.8
   * Patched object kind support  
    
