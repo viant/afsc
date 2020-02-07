@@ -1,2 +1,2 @@
-- Add presign option on GCP
- 
+- Add presign option on GCS (done on s3)
+- Added http proxy support on S3 (done os GCS)
