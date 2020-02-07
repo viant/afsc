@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (s *storager) presign(ctx context.Context, destination string, options ...storage.Option) error {
+func (s *storager) presign(ctx context.Context, destination string, options []storage.Option) error {
 	preSign := &option.PreSign{}
 	var err error
 	if _, ok := option.Assign(options, &preSign); ok {
