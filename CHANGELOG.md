@@ -1,5 +1,6 @@
-## Feb 7 2019 0.14.0
-  * Added presing on s3 (get, upload)
+## Feb 7 2019 0.14.2
+  * Added preSing option on s3 (get, upload)
+  * Added upload content meta support option
 
 ## December 20 2019 0.12.0
   * Added Google Cloud Storage http proxy support

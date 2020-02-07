@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
 	"io"
 	"io/ioutil"
@@ -38,7 +39,8 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
 	checksum := &option.SkipChecksum{}
-	option.Assign(options, &md5Hash, &key, &checksum)
+	meta := &content.Meta{}
+	option.Assign(options, &md5Hash, &key, &checksum, &meta)
 
 	if !checksum.Skip {
 		input := &s3.PutObjectInput{
@@ -46,6 +48,14 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 			Key:      aws.String(destination),
 			Metadata: map[string]*string{},
 		}
+
+		if len(meta.Values) > 0 {
+			for k := range meta.Values {
+				value := meta.Values[k]
+				input.Metadata[k] = &value
+			}
+		}
+
 		content, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return err
@@ -83,9 +93,17 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 	uploader := s3manager.NewUploader(sess)
 	input := &s3manager.UploadInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(destination),
-		Body:   reader,
+		Bucket:   aws.String(s.bucket),
+		Key:      aws.String(destination),
+		Body:     reader,
+		Metadata: map[string]*string{},
+	}
+
+	if len(meta.Values) > 0 {
+		for k := range meta.Values {
+			value := meta.Values[k]
+			input.Metadata[k] = &value
+		}
 	}
 	_, err := uploader.Upload(input)
 	if err != nil {
