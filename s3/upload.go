@@ -20,11 +20,10 @@ import (
 func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	err := s.upload(ctx, destination, mode, reader, options)
-	if err == nil {
-		return nil
+	if err != nil {
+		return err
 	}
-
-	return err
+	return s.presign(ctx, destination, options)
 }
 
 func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5, data []byte) {
@@ -35,6 +34,7 @@ func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5,
 }
 
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
+
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
 	checksum := &option.SkipChecksum{}

@@ -41,6 +41,9 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	if object.Body != nil {
 		_ = object.Body.Close()
 	}
+	if err = s.presign(ctx, location, options); err != nil {
+		return nil, err
+	}
 	return file.NewInfo(name, contentLength, file.DefaultFileOsMode, modified, false, object), nil
 }
 
