@@ -52,6 +52,17 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		if len(meta.Values) > 0 {
 			for k := range meta.Values {
 				value := meta.Values[k]
+				switch k {
+				case content.Type:
+					input.ContentType = &value
+					continue
+				case content.Encoding:
+					input.ContentEncoding = &value
+					continue
+				case content.Language:
+					input.ContentLanguage = &value
+					continue
+				}
 				input.Metadata[k] = &value
 			}
 		}
@@ -102,6 +113,17 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	if len(meta.Values) > 0 {
 		for k := range meta.Values {
 			value := meta.Values[k]
+			switch k {
+			case content.Type:
+				input.ContentType = &value
+				continue
+			case content.Encoding:
+				input.ContentEncoding = &value
+				continue
+			case content.Language:
+				input.ContentLanguage = &value
+				continue
+			}
 			input.Metadata[k] = &value
 		}
 	}
