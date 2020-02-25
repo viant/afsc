@@ -37,15 +37,6 @@ func (c *client) disableProxy() {
 	c.useProxy = false
 }
 
-func defaultHTTPClient(ctx context.Context, scopes Scopes) (*http.Client, error) {
-	o := []goptions.ClientOption{
-		goptions.WithScopes(scopes...),
-		goptions.WithUserAgent(UserAgent),
-	}
-	httpClient, _, err := htransport.NewClient(ctx, o...)
-	return httpClient, err
-}
-
 func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 	var jwTProvider JWTProvider
 	var scopes = make(Scopes, 0)
@@ -66,7 +57,7 @@ func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 		result.projectID = projectID
 		result.Client = oauth2.NewClient(ctx, config.TokenSource(ctx))
 	} else {
-		result.Client, err = defaultHTTPClient(ctx, scopes)
+		result.Client, err = DefaultHTTPClientProvider(ctx, scopes)
 	}
 
 	if proxy.URL != "" {
@@ -94,11 +85,11 @@ func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 		}
 	}
 	if result.projectID == "" {
-		credentials, err := google.FindDefaultCredentials(ctx, scopes...)
+		projectID, err := DefaultProjectProvider(ctx, scopes)
 		if err != nil {
 			return nil, err
 		}
-		result.projectID = credentials.ProjectID
+		result.projectID = projectID
 	}
 	return result, err
 }

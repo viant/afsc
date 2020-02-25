@@ -1,3 +1,7 @@
+## Feb 25 2019 0.14.4
+  * Added gs.DefaultHTTPClientProvider
+  * Added gs.DefaultProjectProvider
+  
 ## Feb 7 2019 0.14.2
   * Added preSing option on s3 (get, upload)
   * Added upload content meta support option
