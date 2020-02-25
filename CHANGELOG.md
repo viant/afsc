@@ -1,4 +1,4 @@
-## Feb 25 2019 0.14.4
+## Feb 25 2019 0.14.6
   * Added gs.DefaultHTTPClientProvider
   * Added gs.DefaultProjectProvider
   
