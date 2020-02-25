@@ -16,7 +16,7 @@ func Provider(options ...storage.Option) (storage.Manager, error) {
 
 
 
-func getDefaultHTTPClient(ctx context.Context, scopes Scopes) (*http.Client, error) {
+func getDefaultHTTPClient(ctx context.Context, scopes []string) (*http.Client, error) {
 	o := []goptions.ClientOption{
 		goptions.WithScopes(scopes...),
 		goptions.WithUserAgent(UserAgent),
@@ -26,7 +26,7 @@ func getDefaultHTTPClient(ctx context.Context, scopes Scopes) (*http.Client, err
 }
 
 
-func getDefaultProject(ctx context.Context, scopes Scopes) (string, error) {
+func getDefaultProject(ctx context.Context, scopes []string) (string, error) {
 	credentials, err := google.FindDefaultCredentials(ctx, scopes...)
 	if err != nil {
 		return "", err
