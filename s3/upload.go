@@ -49,23 +49,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 			Metadata: map[string]*string{},
 		}
 
-		if len(meta.Values) > 0 {
-			for k := range meta.Values {
-				value := meta.Values[k]
-				switch k {
-				case content.Type:
-					input.ContentType = &value
-					continue
-				case content.Encoding:
-					input.ContentEncoding = &value
-					continue
-				case content.Language:
-					input.ContentLanguage = &value
-					continue
-				}
-				input.Metadata[k] = &value
-			}
-		}
+		updateMetaContent(meta, input)
 
 		content, err := ioutil.ReadAll(reader)
 		if err != nil {
@@ -142,4 +126,24 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 	}
 	return err
+}
+
+func updateMetaContent(meta *content.Meta, input *s3.PutObjectInput) {
+	if len(meta.Values) > 0 {
+		for k := range meta.Values {
+			value := meta.Values[k]
+			switch k {
+			case content.Type:
+				input.ContentType = &value
+				continue
+			case content.Encoding:
+				input.ContentEncoding = &value
+				continue
+			case content.Language:
+				input.ContentLanguage = &value
+				continue
+			}
+			input.Metadata[k] = &value
+		}
+	}
 }

@@ -1,3 +1,6 @@
+## Match 7 2019 0.15.0
+ * Update gs.upload with meta content option
+
 ## Feb 25 2019 0.14.6
   * Added gs.DefaultHTTPClientProvider
   * Added gs.DefaultProjectProvider

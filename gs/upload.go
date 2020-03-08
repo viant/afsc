@@ -7,7 +7,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
+	"google.golang.org/api/googleapi"
 	gstorage "google.golang.org/api/storage/v1"
 	"io"
 	"io/ioutil"
@@ -33,17 +35,16 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 //Upload uploads content
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	destination = strings.Trim(destination, "/")
-
 	gobject := &gstorage.Object{
 		Bucket: s.bucket,
 		Name:   destination,
 	}
-
 	var newObject *storage.Object
 	checksum := &option.SkipChecksum{}
 	crcHash := &option.Crc{}
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
+	meta := &content.Meta{}
 	generation := &option.Generation{}
 	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
 	var err error
@@ -74,14 +75,19 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 	}
 
+	updateMetaContent(meta, gobject)
+
 	if readerAt, ok := reader.(io.ReaderAt); ok {
 		sizer := reader.(storage.Sizer)
 		call = call.ResumableMedia(ctx, readerAt, sizer.Size(), detectContentType(destination))
 	} else {
-		call.Media(reader)
+		mediaOpts := []googleapi.MediaOption{
+			googleapi.ChunkSize(DefaultUploadChunkSize),
+			googleapi.ContentType(gobject.ContentType),
+		}
+		call.Media(reader, mediaOpts...).Projection("full")
 	}
 	gobject, err = s.uploadWithRetires(ctx, call, content)
-
 	if isBucketNotFound(err) {
 		if err = s.createBucket(ctx); err != nil {
 			return err
@@ -105,6 +111,29 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), gobject.Size)
 	}
 	return err
+}
+
+func updateMetaContent(meta *content.Meta, gobject *gstorage.Object) {
+	if len(meta.Values) > 0 {
+		for k := range meta.Values {
+			value := meta.Values[k]
+			switch k {
+			case content.Type:
+				gobject.ContentType = value
+				continue
+			case content.Encoding:
+				gobject.ContentEncoding = value
+				continue
+			case content.Language:
+				gobject.ContentLanguage = value
+				continue
+			}
+			gobject.Metadata[k] = value
+		}
+	}
+	if gobject.ContentType == "" {
+		gobject.ContentType = detectContentType(gobject.Name)
+	}
 }
 
 func (s *storager) uploadWithRetires(ctx context.Context, call *gstorage.ObjectsInsertCall, data []byte) (object *gstorage.Object, err error) {

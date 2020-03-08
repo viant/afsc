@@ -14,8 +14,6 @@ func Provider(options ...storage.Option) (storage.Manager, error) {
 	return New(options...), nil
 }
 
-
-
 func getDefaultHTTPClient(ctx context.Context, scopes []string) (*http.Client, error) {
 	o := []goptions.ClientOption{
 		goptions.WithScopes(scopes...),
@@ -25,7 +23,6 @@ func getDefaultHTTPClient(ctx context.Context, scopes []string) (*http.Client, e
 	return httpClient, err
 }
 
-
 func getDefaultProject(ctx context.Context, scopes []string) (string, error) {
 	credentials, err := google.FindDefaultCredentials(ctx, scopes...)
 	if err != nil {
@@ -34,10 +31,8 @@ func getDefaultProject(ctx context.Context, scopes []string) (string, error) {
 	return credentials.ProjectID, nil
 }
 
-
 //DefaultHTTPClientProvider defaultHTTP client
 var DefaultHTTPClientProvider = getDefaultHTTPClient
 
 //DefaultProjectProvider default projectid provider
 var DefaultProjectProvider = getDefaultProject
-
