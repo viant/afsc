@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -86,21 +87,20 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	if len(gcpOptions) == 0 {
 		client, err = newClient(ctx, options)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "failed to client %T", client)
 		}
 		gcpOptions = make(ClientOptions, 0)
 		gcpOptions = append(gcpOptions, goption.WithHTTPClient(client.Client))
 	}
 
+
 	service, err := gstorage.NewService(ctx, gcpOptions...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to create %T", service)
 	}
-
 	if project.ID != "" {
 		client.projectID = project.ID
 	}
-
 	bucket := url.Host(baseURL)
 	if bucket == "" {
 		return nil, fmt.Errorf("bucket was empty, URL: %v", baseURL)
