@@ -2,7 +2,6 @@ package gs
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
@@ -77,7 +76,6 @@ func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 		case *oauth2.Transport:
 			val.Base = transport
 		default:
-			fmt.Printf("setting proxy %T\n", result.Transport)
 			result.Transport = transport
 		}
 	}

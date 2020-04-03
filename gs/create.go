@@ -18,7 +18,7 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 	if destination == "" {
 		if _, err := s.List(ctx, ""); err != nil {
 			if isBucketNotFound(err) {
-				if err = s.createBucket(ctx); err != nil {
+				if createErr := s.createBucket(ctx); createErr != nil {
 					return err
 				}
 			}

@@ -89,7 +89,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 	gobject, err = s.uploadWithRetires(ctx, call, content)
 	if isBucketNotFound(err) {
-		if err = s.createBucket(ctx); err != nil {
+		if createErr := s.createBucket(ctx); createErr != nil {
 			return err
 		}
 		gobject, err = call.Do()
