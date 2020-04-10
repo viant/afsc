@@ -93,7 +93,6 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 		gcpOptions = append(gcpOptions, goption.WithHTTPClient(client.Client))
 	}
 
-
 	service, err := gstorage.NewService(ctx, gcpOptions...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create %T", service)

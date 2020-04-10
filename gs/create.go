@@ -28,10 +28,14 @@ func (s *storager) Create(ctx context.Context, destination string, mode os.FileM
 }
 
 func (s *storager) createBucket(ctx context.Context) error {
+
 	bucket := &gstorage.Bucket{
-		Name: s.bucket,
+		Name:     s.bucket,
+		Location: s.client.region,
 	}
+
 	call := s.Buckets.Insert(s.client.projectID, bucket)
+
 	call.Context(ctx)
 	_, err := call.Do()
 	return err

@@ -15,9 +15,9 @@ import (
 
 type client struct {
 	projectID string
+	region    string
 	ctx       context.Context
 	*http.Client
-
 	useProxy         bool
 	canProxyFallback bool
 }
@@ -37,6 +37,7 @@ func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 	var jwTProvider JWTProvider
 	var scopes = make(Scopes, 0)
 	proxy := &option.Proxy{}
+
 	option.Assign(options, &jwTProvider, &scopes, &proxy)
 	if len(scopes) == 0 {
 		scopes = NewScopes(gstorage.CloudPlatformScope, gstorage.DevstorageFullControlScope)
@@ -44,6 +45,10 @@ func newClient(ctx context.Context, options []storage.Option) (*client, error) {
 	var err error
 	result := &client{
 		ctx: ctx,
+	}
+	region := &option.Region{}
+	if _, ok := option.Assign(options, &region); ok {
+		result.region = region.Name
 	}
 	if jwTProvider != nil {
 		config, projectID, err := jwTProvider.JWTConfig(scopes...)
