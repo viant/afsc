@@ -40,7 +40,8 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	key := &option.AES256Key{}
 	checksum := &option.SkipChecksum{}
 	meta := &content.Meta{}
-	option.Assign(options, &md5Hash, &key, &checksum, &meta)
+	serverSideEncryption := &option.ServerSideEncryption{}
+	option.Assign(options, &md5Hash, &key, &checksum, &meta, &serverSideEncryption)
 
 	if !checksum.Skip {
 		input := &s3.PutObjectInput{
@@ -63,6 +64,10 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 			input.SetSSECustomerKey(string(key.Key))
 			input.SetSSECustomerKeyMD5(key.Base64KeyMd5Hash)
 			input.SetSSECustomerAlgorithm(customEncryptionAlgorithm)
+		}
+
+		if serverSideEncryption.Algorithm != "" {
+			input.ServerSideEncryption = aws.String(serverSideEncryption.Algorithm)
 		}
 
 		_, err = s.PutObjectWithContext(ctx, input)

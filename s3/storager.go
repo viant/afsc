@@ -82,7 +82,7 @@ func getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
 	if config == nil {
 		config = &aws.Config{}
 	}
-	region := &Region{}
+	region := &option.Region{}
 	if _, ok := option.Assign(options, &region); ok {
 		config.Region = &region.Name
 	}
