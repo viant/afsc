@@ -10,6 +10,8 @@ import (
 	"github.com/viant/afs/storage"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 )
 
 //AwsConfigProvider represents aws config provider
@@ -45,7 +47,11 @@ func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 		return nil, errors.New("auth location was empty")
 	}
 	if location.Path != "" {
-		file, err := os.Open(location.Path)
+		locationPath :=  location.Path
+		if strings.HasPrefix(locationPath, "~/") {
+			locationPath = path.Join(os.Getenv("HOME"), locationPath[2:])
+		}
+		file, err := os.Open(locationPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to open auth config")
 		}

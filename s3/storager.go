@@ -9,6 +9,7 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"github.com/viant/afsc/logger"
+	"log"
 	"os"
 )
 
@@ -52,6 +53,9 @@ func filterAuthOption(options []storage.Option) (*aws.Config, error) {
 	}
 	if credLocation := os.Getenv(awsCredentials); credLocation != "" {
 		authConfig, err := NewAuthConfig(&option.Location{Path: credLocation})
+		if err != nil {
+			log.Print(err)
+		}
 		if err == nil {
 			return authConfig.AwsConfig()
 		}
