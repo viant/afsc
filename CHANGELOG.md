@@ -1,3 +1,11 @@
+## Match 7 2019 0.16.1
+ * Add AWS_CREDENTIALS support with json credentials based auth
+
+## Match 7 2019 0.16.0
+ * Added S3 ServerSideEncryption encryption with default key
+ * Moved s3.Region to afs.option
+ * Added option.Region with both S3 and GSC
+ 
 ## Match 7 2019 0.15.0
  * Update gs.upload with meta content option
 

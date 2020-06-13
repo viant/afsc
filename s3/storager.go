@@ -12,7 +12,10 @@ import (
 	"os"
 )
 
-const awsRegionEnvKey = "AWS_REGION"
+const (
+	awsRegionEnvKey = "AWS_REGION"
+	awsCredentials = "AWS_CREDENTIALS"
+)
 
 type storager struct {
 	*s3.S3
@@ -33,8 +36,9 @@ func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 		authOptions = append(authOptions, awsConfig)
 	}
 	return authOptions
-
 }
+
+
 
 //FilterAuthOptions filters auth options
 func filterAuthOption(options []storage.Option) (*aws.Config, error) {
@@ -45,6 +49,12 @@ func filterAuthOption(options []storage.Option) (*aws.Config, error) {
 	var provider AwsConfigProvider
 	if _, ok := option.Assign(options, &provider); ok {
 		return provider.AwsConfig()
+	}
+	if credLocation := os.Getenv(awsCredentials); credLocation != "" {
+		authConfig, err := NewAuthConfig(&option.Location{Path: credLocation})
+		if err == nil {
+			return authConfig.AwsConfig()
+		}
 	}
 	return nil, nil
 }
