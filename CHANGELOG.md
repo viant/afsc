@@ -1,4 +1,4 @@
-## June 16 2019 0.16.1
+## June 16 2019 0.17.0
  * Added content.Meta support to get object (s3/gs) method 
  
 ## Match 7 2019 0.16.1
