@@ -1,5 +1,8 @@
+## June 16 2019 0.16.1
+ * Added content.Meta support to get object (s3/gs) method 
+ 
 ## Match 7 2019 0.16.1
- * Add AWS_CREDENTIALS support with json credentials based auth
+ * Added AWS_CREDENTIALS support with json credentials based auth
 
 ## Match 7 2019 0.16.0
  * Added S3 ServerSideEncryption encryption with default key

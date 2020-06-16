@@ -15,7 +15,7 @@ import (
 
 const (
 	awsRegionEnvKey = "AWS_REGION"
-	awsCredentials = "AWS_CREDENTIALS"
+	awsCredentials  = "AWS_CREDENTIALS"
 )
 
 type storager struct {
@@ -38,8 +38,6 @@ func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 	}
 	return authOptions
 }
-
-
 
 //FilterAuthOptions filters auth options
 func filterAuthOption(options []storage.Option) (*aws.Config, error) {

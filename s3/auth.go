@@ -47,7 +47,7 @@ func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 		return nil, errors.New("auth location was empty")
 	}
 	if location.Path != "" {
-		locationPath :=  location.Path
+		locationPath := location.Path
 		if strings.HasPrefix(locationPath, "~/") {
 			locationPath = path.Join(os.Getenv("HOME"), locationPath[2:])
 		}

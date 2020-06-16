@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
 	"os"
@@ -35,6 +36,18 @@ func (s *storager) getObject(ctx context.Context, location string, options []sto
 		object, err = objectCall.Do()
 		return err
 	}, s)
+
+	if err == nil {
+		meta := &content.Meta{}
+		if _, ok := option.Assign(options, &meta); ok {
+			meta.Values = make(map[string]string)
+			if len(object.Metadata) > 0 {
+				for k, v := range object.Metadata {
+					meta.Values[k] = v
+				}
+			}
+		}
+	}
 	return object, err
 }
 

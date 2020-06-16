@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
 	"os"
 	"path"
@@ -30,6 +31,7 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	if !hasObject {
 		return nil, fmt.Errorf(noSuchKeyMessage + " " + location)
 	}
+	s.assignMetadata(options, object)
 	contentLength := int64(0)
 	modified := time.Now()
 	if object.LastModified != nil {
@@ -45,6 +47,22 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 		return nil, err
 	}
 	return file.NewInfo(name, contentLength, file.DefaultFileOsMode, modified, false, object), nil
+}
+
+func (s *storager) assignMetadata(options []storage.Option, object *s3.GetObjectOutput) {
+	meta := &content.Meta{}
+	if _, ok := option.Assign(options, &meta); ok {
+		meta.Values = make(map[string]string)
+		if len(object.Metadata) > 0 {
+			for k, v := range object.Metadata {
+				value := ""
+				if v != nil {
+					value = *v
+				}
+				meta.Values[k] = value
+			}
+		}
+	}
 }
 
 //Get returns an object for supplied location
