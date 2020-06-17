@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
@@ -17,6 +18,8 @@ const (
 	awsRegionEnvKey = "AWS_REGION"
 	awsCredentials  = "AWS_CREDENTIALS"
 )
+
+var awsDefaultRegion = "us-east-1"
 
 type storager struct {
 	*s3.S3
@@ -111,7 +114,7 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	var err error
 	result.config, err = getAwsConfig(options)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get aws config")
 	}
 
 	if result.config != nil {
@@ -119,17 +122,32 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	} else {
 		result.S3 = s3.New(session.New())
 	}
-	output, err := result.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &result.bucket})
-	if err != nil {
-		logger.Logf("unable to get '%v' bucket location: %v", result.bucket, err)
+
+	if result.S3.Config.Region == nil || *result.S3.Config.Region == "" {
+		result.S3.Config.Region = &awsDefaultRegion
+		result.Config.Region = &awsDefaultRegion
+		result.S3 = s3.New(session.New(), result.config)
 	}
-	if err == nil {
-		if output.LocationConstraint != nil {
-			if result.config.Region == nil || *result.config.Region != *output.LocationConstraint {
-				result.config.Region = output.LocationConstraint
-				result.S3 = s3.New(session.New(), result.config)
-			}
-		}
-	}
+	result.adjustRegionIfNeeded()
 	return result, nil
+}
+
+func (s *storager) adjustRegionIfNeeded() {
+	output, err := s.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &s.bucket})
+	if err != nil {
+		logger.Logf("unable to get '%v' bucket location: %v", s.bucket, err)
+		return
+	}
+	if output.LocationConstraint != nil {
+		if s.config.Region == nil || *s.config.Region != *output.LocationConstraint {
+			s.config.Region = output.LocationConstraint
+			s.S3 = s3.New(session.New(), s.config)
+		}
+	} else {
+		if *s.config.Region != awsDefaultRegion {
+			s.config.Region = &awsDefaultRegion
+			s.S3 = s3.New(session.New(), s.config)
+		}
+
+	}
 }

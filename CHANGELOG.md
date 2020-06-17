@@ -1,3 +1,6 @@
+## June 16 2019 0.17.1
+ * Added default region supprot
+ 
 ## June 16 2019 0.17.0
  * Added content.Meta support to get object (s3/gs) method 
  
