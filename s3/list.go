@@ -87,7 +87,7 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 		folder = len(output.CommonPrefixes)
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
 		s.addFiles(parent, result, output.Contents, page, matcher)
-		return (! page.HasReachedLimit()) && lastPage
+		return (! page.HasReachedLimit()) && ! lastPage
 	})
 	if err != nil {
 		err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
