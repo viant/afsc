@@ -143,7 +143,7 @@ func (s *storager) adjustRegionIfNeeded() {
 			s.config.Region = output.LocationConstraint
 			s.S3 = s3.New(session.New(), s.config)
 		}
-	} else {
+	} else if s.config != nil {
 		if *s.config.Region != awsDefaultRegion {
 			s.config.Region = &awsDefaultRegion
 			s.S3 = s3.New(session.New(), s.config)
