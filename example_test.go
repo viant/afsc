@@ -23,7 +23,7 @@ func ExampleNew() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := fs.Download(ctx, object)
+		reader, err := fs.Open(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}

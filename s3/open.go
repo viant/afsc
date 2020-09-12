@@ -17,8 +17,8 @@ import (
 	"io/ioutil"
 )
 
-//Download return content reader and hash values if md5 or crc option is supplied or error
-func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+//Open return content reader and hash values if md5 or crc option is supplied or error
+func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	var sess *session.Session
 	if s.config == nil {
 		sess = session.New()

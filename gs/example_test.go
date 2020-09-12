@@ -27,7 +27,7 @@ func ExampleAfsService() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := service.Download(ctx, object)
+		reader, err := service.Open(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func ExampleAfsService() {
 func ExampleNew() {
 	service := gs.New()
 	ctx := context.Background()
-	reader, err := service.DownloadWithURL(ctx, "gs://my-bucket/folder/asset")
+	reader, err := service.OpenURL(ctx, "gs://my-bucket/folder/asset")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func ExampleNewJwtConfig() {
 	//add default import _ "github.com/viant/afsc/gs"
 
 	service := afs.New()
-	reader, err := service.DownloadWithURL(ctx, "gs://my-bucket/myfolder/asset.txt", jwtConfig)
+	reader, err := service.OpenURL(ctx, "gs://my-bucket/myfolder/asset.txt", jwtConfig)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
@@ -125,7 +125,7 @@ func ExampleNewClientOptions() {
 	jsonAuth := goption.WithCredentialsJSON(JSON)
 
 	service := afs.New()
-	reader, err := service.DownloadWithURL(ctx, "gs://my-bucket/myfolder/asset.txt", gs.NewClientOptions(jsonAuth), gs.NewProject("myproject"))
+	reader, err := service.OpenURL(ctx, "gs://my-bucket/myfolder/asset.txt", gs.NewClientOptions(jsonAuth), gs.NewProject("myproject"))
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +144,7 @@ func ExampleNewCustomKey() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.DownloadWithURL(ctx, "gs://mybucket/folder/secret1.txt", customKey)
+	reader, err := service.OpenURL(ctx, "gs://mybucket/folder/secret1.txt", customKey)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
