@@ -29,7 +29,7 @@ func TestStorager_Copy(t *testing.T) {
 	}{
 
 		{
-			description: "single asset download",
+			description: "single asset open",
 			URL:         fmt.Sprintf("gs://%v/", TestBucket),
 			dest:        "copy001/dst",
 			source:      "copy001/src",
@@ -38,7 +38,7 @@ func TestStorager_Copy(t *testing.T) {
 			},
 		},
 		{
-			description: "multi asset download",
+			description: "multi asset open",
 			URL:         fmt.Sprintf("gs://%v/", TestBucket),
 			dest:        "copy002/dst",
 			source:      "copy002/src",
@@ -59,7 +59,7 @@ func TestStorager_Copy(t *testing.T) {
 		for _, asset := range useCase.assets {
 			URL := url.Join(useCase.URL, asset.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
-			reader, err := mgr.DownloadWithURL(ctx, URL)
+			reader, err := mgr.OpenURL(ctx, URL)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}

@@ -65,9 +65,9 @@ func TestAES256Key_SetHeader(t *testing.T) {
 		URL := url.Join(useCase.URL, useCase.location)
 		err := mgr.Upload(ctx, URL, 0644, bytes.NewReader(useCase.data), key)
 		assert.Nil(t, err, useCase.description)
-		_, err = mgr.DownloadWithURL(ctx, URL)
+		_, err = mgr.OpenURL(ctx, URL)
 		assert.NotNil(t, err, useCase.description)
-		reader, err := mgr.DownloadWithURL(ctx, URL, key)
+		reader, err := mgr.OpenURL(ctx, URL, key)
 		if !assert.Nil(t, err, useCase.description) {
 			continue
 		}

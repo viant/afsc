@@ -13,13 +13,13 @@ import (
 	"strings"
 )
 
-func (s *storager) Download(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {
-	reader, err = s.download(ctx, location, options)
+func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {
+	reader, err = s.open(ctx, location, options)
 	return reader, err
 }
 
-//Download return content reader and hash values if md5 or crc option is supplied or error
-func (s *storager) download(ctx context.Context, location string, options []storage.Option) (io.ReadCloser, error) {
+//Open return content reader and hash values if md5 or crc option is supplied or error
+func (s *storager) open(ctx context.Context, location string, options []storage.Option) (io.ReadCloser, error) {
 	location = strings.Trim(location, "/")
 	call := s.Objects.Get(s.bucket, location)
 	call.Context(ctx)
@@ -61,7 +61,7 @@ func (s *storager) download(ctx context.Context, location string, options []stor
 		return err
 	}, s)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to download gs://%v/%v ", s.bucket, location)
+		return nil, errors.Wrapf(err, "failed to open gs://%v/%v ", s.bucket, location)
 	}
 
 	if !http.IsStatusOK(response) {

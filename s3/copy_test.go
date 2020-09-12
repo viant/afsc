@@ -69,7 +69,7 @@ func TestStorager_Copy(t *testing.T) {
 		for _, resource := range useCase.assets {
 			URL := url.Join(useCase.URL, resource.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
-			reader, err := mgr.DownloadWithURL(ctx, URL)
+			reader, err := mgr.OpenURL(ctx, URL)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}

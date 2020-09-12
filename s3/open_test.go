@@ -52,7 +52,7 @@ func TestStorager_Download(t *testing.T) {
 		}
 
 		for _, asset := range useCase.assets {
-			reader, err := mgr.DownloadWithURL(ctx, url.Join(useCase.URL, asset.Name))
+			reader, err := mgr.OpenURL(ctx, url.Join(useCase.URL, asset.Name))
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}

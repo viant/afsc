@@ -29,9 +29,9 @@ func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, o
 		return errors.Wrapf(err, "copy source not found %v", sourceURL)
 	}
 	downloadOptions := append(options, option.NewStream(defaultPartSize, int(objects[0].Size())))
-	reader, err := m.DownloadWithURL(ctx, sourceURL, downloadOptions...)
+	reader, err := m.OpenURL(ctx, sourceURL, downloadOptions...)
 	if err != nil {
-		return errors.Wrapf(err, "failed download %v for copy %v", sourceURL, destURL)
+		return errors.Wrapf(err, "failed open %v for copy %v", sourceURL, destURL)
 	}
 	defer reader.Close()
 	uploadOptions := append(options, option.NewSkipChecksum(true))

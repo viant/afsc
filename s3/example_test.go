@@ -27,7 +27,7 @@ func ExampleAfsService() {
 		if object.IsDir() {
 			continue
 		}
-		reader, err := service.Download(ctx, object)
+		reader, err := service.Open(ctx, object)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func ExampleAfsService() {
 func ExampleNew() {
 	service := gs.New()
 	ctx := context.Background()
-	reader, err := service.DownloadWithURL(ctx, "s3://my-bucket/folder/asset")
+	reader, err := service.OpenURL(ctx, "s3://my-bucket/folder/asset")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func ExampleNewAuthConfig() {
 	//add default import _ "github.com/viant/afsc/s3"
 
 	service := afs.New()
-	reader, err := service.DownloadWithURL(ctx, "s3://my-bucket/myfolder/asset.txt", authConfig)
+	reader, err := service.OpenURL(ctx, "s3://my-bucket/myfolder/asset.txt", authConfig)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
@@ -118,7 +118,7 @@ func ExampleAwsConfig() {
 	//get config
 	ctx := context.Background()
 	service := afs.New()
-	reader, err := service.DownloadWithURL(ctx, "s3://my-bucket/myfolder/asset.txt", awsConfig)
+	reader, err := service.OpenURL(ctx, "s3://my-bucket/myfolder/asset.txt", awsConfig)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
@@ -137,7 +137,7 @@ func ExampleNewCustomKey() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
+	reader, err := service.OpenURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
@@ -151,7 +151,7 @@ func Example_Streaming() {
 	ctx := context.Background()
 	fs := afs.New()
 	sourceURL := "s3://myBucket/path/myasset.gz"
-	reader, err := fs.DownloadWithURL(ctx, sourceURL, option.NewStream(64*1024*1024, 0))
+	reader, err := fs.OpenURL(ctx, sourceURL, option.NewStream(64*1024*1024, 0))
 	if err != nil {
 		log.Fatal(err)
 	}

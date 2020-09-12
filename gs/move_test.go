@@ -26,7 +26,7 @@ func TestStorager_Move(t *testing.T) {
 		assets      []*asset.Resource
 	}{
 		{
-			description: "single asset download",
+			description: "single asset open",
 			URL:         fmt.Sprintf("gs://%v/", TestBucket),
 			dest:        "move001/dst",
 			source:      "move001/src",
@@ -35,7 +35,7 @@ func TestStorager_Move(t *testing.T) {
 			},
 		},
 		{
-			description: "multi asset download",
+			description: "multi asset open",
 			URL:         fmt.Sprintf("gs://%v/", TestBucket),
 			dest:        "move002/dst",
 			source:      "move002/src",
@@ -55,7 +55,7 @@ func TestStorager_Move(t *testing.T) {
 		for _, asset := range useCase.assets {
 			URL := url.Join(useCase.URL, asset.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
-			reader, err := mgr.DownloadWithURL(ctx, URL)
+			reader, err := mgr.OpenURL(ctx, URL)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
