@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/file"
@@ -67,6 +68,21 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 		return err
 	}
 	return err
+}
+
+//ErrorCode returns error code
+func (m *manager) ErrorCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	if failure, ok := err.(awserr.RequestFailure); ok {
+		return failure.StatusCode()
+	}
+	origin := errors.Cause(err)
+	if failure, ok := origin.(awserr.RequestFailure); ok {
+		return failure.StatusCode()
+	}
+	return 0
 }
 
 //Move moves data from source to dest

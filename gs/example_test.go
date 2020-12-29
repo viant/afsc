@@ -68,7 +68,7 @@ func Example_Storager() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reader, err := service.Download(ctx, location)
+	reader, err := service.Open(ctx, location)
 	if err != nil {
 		log.Fatal(err)
 	}

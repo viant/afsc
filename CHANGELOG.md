@@ -1,4 +1,8 @@
-## June 16 2019 1.0.0
+## December 28 2019 1.1.0
+ * Added error coder
+ * Added generation option for gs.Get, gs.Exists
+ 
+##  June 16 2019 1.0.0
  * Updated API with afs 1.0.0
  
 ## June 16 2019 0.17.1

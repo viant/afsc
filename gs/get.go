@@ -47,7 +47,12 @@ func (s *storager) getObject(ctx context.Context, location string, options []sto
 				}
 			}
 		}
+		generation := &option.Generation{}
+		if _, ok := option.Assign(options, &generation); ok {
+			generation.Generation = object.Generation
+		}
 	}
+
 	return object, err
 }
 
