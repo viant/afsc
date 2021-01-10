@@ -10,6 +10,7 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"github.com/viant/afsc/logger"
+	"google.golang.org/api/googleapi"
 )
 
 const defaultPartSize = 32 * 1024 * 1024
@@ -100,6 +101,20 @@ func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options .
 		}
 	}
 	return err
+}
+
+func (m *manager) ErrorCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	if googleError, ok := err.(*googleapi.Error); ok {
+		return googleError.Code
+	}
+	origin := errors.Cause(err)
+	if googleError, ok := origin.(*googleapi.Error); ok {
+		return googleError.Code
+	}
+	return 0
 }
 
 func newManager(options ...storage.Option) *manager {

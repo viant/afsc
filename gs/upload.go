@@ -45,13 +45,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
 	meta := &content.Meta{}
-	generation := &option.Generation{}
 	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
 	var err error
 	var content []byte
-	if _, assigned := option.Assign(options, &generation); !assigned {
-		generation = nil
-	}
 	if !checksum.Skip {
 		content, err = ioutil.ReadAll(reader)
 		if err != nil {
@@ -67,13 +63,11 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 			return err
 		}
 	}
-	if generation != nil {
-		if generation.WhenMatch {
-			call.IfGenerationMatch(generation.Generation)
-		} else {
-			call.IfGenerationNotMatch(generation.Generation)
-		}
-	}
+	s.setGeneration(func(generation int64) {
+		call.IfGenerationMatch(generation)
+	}, func(generation int64) {
+		call.IfGenerationNotMatch(generation)
+	}, options)
 
 	updateMetaContent(meta, gobject)
 

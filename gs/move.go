@@ -51,6 +51,11 @@ func (s *storager) move(ctx context.Context, sourcePath, destBucket, destPath st
 	object.Name = destPath
 	call := s.Objects.Rewrite(s.bucket, sourcePath, destBucket, destPath, object)
 	call.Context(ctx)
+	s.setGeneration(func(generation int64) {
+		call.IfGenerationMatch(generation)
+	}, func(generation int64) {
+		call.IfGenerationNotMatch(generation)
+	}, options)
 	err = runWithRetries(ctx, func() error {
 		_, err = call.Do()
 		return err

@@ -19,6 +19,13 @@ func (s *storager) Delete(ctx context.Context, location string, options ...stora
 	}
 	call := s.Objects.Delete(s.bucket, location)
 	call.Context(ctx)
+	s.setGeneration(func(generation int64) {
+		call.IfGenerationMatch(generation)
+	}, func(generation int64) {
+		call.IfGenerationNotMatch(generation)
+	}, options)
+
+	call.Context(ctx)
 	err = runWithRetries(ctx, func() error {
 		return call.Do()
 	}, s)
