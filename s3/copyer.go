@@ -7,7 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"os"
 	"sort"
+	"strconv"
 	"sync"
+)
+
+const (
+	multiCopyThreadsKey = "AWS_MCOPY_CONCURRENCY"
+	multiCopyDebug      = "AWS_MCOPY_DEBUG"
 )
 
 type copyer struct {
@@ -25,12 +31,23 @@ func (c *copyer) copy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	debug := os.Getenv(multiCopyDebug) == "true"
 
 	if c.uploadID == "" {
 		return fmt.Errorf("invalid upload id: %v", c.uploadID)
 	}
-	 wg := sync.WaitGroup{}
-	var rateLimit = make(chan bool, 10)
+	if debug {
+		fmt.Printf("multiCopy(%v): %s -> %s/%s\n", c.parts, *c.in.CopySource, *c.in.Bucket, *c.in.Key)
+	}
+
+	routines := 10
+	if value := os.Getenv(multiCopyThreadsKey); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			routines = intValue
+		}
+	}
+	wg := sync.WaitGroup{}
+	var rateLimit = make(chan bool, routines)
 	wg.Add(int(c.parts))
 	mux := sync.Mutex{}
 	parts := CompletedParts{}
@@ -48,6 +65,9 @@ func (c *copyer) copy(ctx context.Context) error {
 				wg.Done()
 				<-rateLimit
 			}()
+			if debug {
+				fmt.Printf("multiCopy[%v]: bytes=%d-%d\n", part, start, finish)
+			}
 			params := &s3.UploadPartCopyInput{
 				Bucket:               c.in.Bucket,
 				Key:                  c.in.Key,
@@ -60,6 +80,9 @@ func (c *copyer) copy(ctx context.Context) error {
 			}
 			output, e := c.S3.UploadPartCopyWithContext(ctx, params)
 			if e != nil {
+				if debug {
+					fmt.Printf("multiCopy: chunk upload error  %v\n", err)
+				}
 				err = e
 
 			}
@@ -72,12 +95,15 @@ func (c *copyer) copy(ctx context.Context) error {
 				mux.Unlock()
 			}
 
-		}(start, finish, part + 1)
+		}(start, finish, part+1)
 	}
 	wg.Wait()
 	if err == nil {
 		sort.Sort(parts)
 		err = c.complete(ctx, parts)
+	}
+	if debug {
+		fmt.Printf("multiCopy: upload completed %v, err: %v\n", c.in.CopySource, err)
 	}
 	return err
 }
@@ -115,8 +141,6 @@ func newCopyer(client *s3.S3, info os.FileInfo, partSize int64, input *s3.CopyOb
 		parts:     (info.Size() / partSize) + 1,
 	}
 }
-
-
 
 type CompletedParts []*s3.CompletedPart
 
