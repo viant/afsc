@@ -1,5 +1,5 @@
-## June 7 2021 1.4.0
-* Added copy support over 5GB to aws
+## June 7 2021 1.5.0
+* Added copy/move support over 5GB to aws
 
 ## December 28 2020 1.2.0
  * Added generation support to all gs related operations
