@@ -1,4 +1,4 @@
-## June 7 2021 1.3.0
+## June 7 2021 1.4.0
 * Added copy support over 5GB to aws
 
 ## December 28 2020 1.2.0
