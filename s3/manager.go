@@ -11,9 +11,17 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"github.com/viant/afsc/logger"
+	"os"
 )
 
-const defaultPartSize = 10 * 1024 * 1024
+const (
+	defaultPartSize = 10 * 1024 * 1024
+	awsDebug = "SMIRROR_AWS_DEBUG"
+)
+
+func isDebug() bool {
+	return os.Getenv(awsDebug) == "true"
+}
 
 type manager struct {
 	*base.Manager
@@ -54,6 +62,9 @@ func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options .
 	destPath := url.Path(destURL)
 	key := &option.AES256Key{}
 	_, hasKey := option.Assign(options, &key)
+	if isDebug() {
+		fmt.Printf("can use native copy: %v, key: %+v, native copy: %T\n", !hasKey, key, rawStorager)
+	}
 	if !hasKey {
 		err = rawStorager.Copy(ctx, sourcePath, destBucket, destPath, options...)
 	}
