@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"path"
@@ -14,7 +15,7 @@ import (
 func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
-	_, err := s.get(ctx, sourcePath, options)
+	source, err := s.get(ctx, sourcePath, options)
 	if isNotFound(err) {
 		objectOpt := &option.ObjectKind{}
 		if _, ok := option.Assign(options, &objectOpt); ok && objectOpt.File {
@@ -38,11 +39,20 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	if err != nil {
 		return err
 	}
-	_, err = s.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
+	copyInput :=  &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
 		Key:        &destPath,
 		Bucket:     &destBucket,
-	})
+	}
+	if source.Size() >= maxCopySize {
+		copyer := newCopyer(s.S3, source, defaultPartSize, copyInput)
+		err =  copyer.copy(ctx)
+	} else {
+		_, err = s.S3.CopyObjectWithContext(ctx, copyInput)
+	}
+	if err != nil {
+		err = errors.Wrapf(err, "failed to move: s3://%v/%v to s3://%v/%v", s.bucket, sourcePath, destBucket, destPath)
+	}
 	if err == nil {
 		err = s.Delete(ctx, sourcePath)
 	}
