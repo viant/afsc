@@ -12,10 +12,15 @@ import (
 	"strings"
 )
 
+const (
+	maxCopySize = 5  * 1024 * 1024 * 1024
+)
+
 func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	_, err := s.get(ctx, sourcePath, options)
+	source, _ := s.get(ctx, sourcePath, nil)
 	if isNotFound(err) {
 		objectOpt := &option.ObjectKind{}
 		if _, ok := option.Assign(options, &objectOpt); ok && objectOpt.File {
@@ -36,14 +41,23 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 		}
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
-	_, err = s.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
+
+
+	copyInput := &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
 		Key:        &destPath,
 		Bucket:     &destBucket,
-	})
+	}
+	if source.Size() >= maxCopySize {
+		copyer := newCopyer(s.S3, source, defaultPartSize, copyInput)
+		return copyer.copy(ctx)
+	}
+
+	_, err = s.S3.CopyObjectWithContext(ctx, copyInput)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to copy: s3://%v/%v to s3://%v/%v", s.bucket, sourcePath, destBucket, destPath)
 	}

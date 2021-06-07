@@ -1,7 +1,10 @@
-## December 28 2019 1.2.0
+## June 7 2021 1.3.0
+* Added copy support over 5GB to aws
+
+## December 28 2020 1.2.0
  * Added generation support to all gs related operations
  
-## December 28 2019 1.1.0
+## December 28 2020 1.1.0
  * Added error coder
  * Added generation option for gs.Get, gs.Exists
  
