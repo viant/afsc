@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const copySizeThreshold = 100 * 1024 * 1024
+
 func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	return s.copy(ctx, sourcePath, destBucket, destPath, options)
 }
@@ -48,7 +50,7 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 	object, _ := info.Source.(*gstorage.Object)
 	object.Name = destPath
-	if info.Size() <= 100*1024*1024 {
+	if info.Size() < copySizeThreshold {
 		call := s.Objects.Copy(s.bucket, sourcePath, destBucket, destPath, object)
 		call.Context(ctx)
 		s.setGeneration(func(generation int64) {
