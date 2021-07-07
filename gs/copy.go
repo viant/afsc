@@ -48,15 +48,27 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 	object, _ := info.Source.(*gstorage.Object)
 	object.Name = destPath
+	if info.Size() > 100*1024*1024 {
+		call := s.Objects.Copy(s.bucket, sourcePath, destBucket, destPath, object)
+		call.Context(ctx)
+		s.setGeneration(func(generation int64) {
+			call.IfGenerationMatch(generation)
+		}, func(generation int64) {
+			call.IfGenerationNotMatch(generation)
+		}, options)
+		return runWithRetries(ctx, func() error {
+			_, err = call.Do()
+			return err
+		}, s)
 
-	call := s.Objects.Copy(s.bucket, sourcePath, destBucket, destPath, object)
+	}
+	call := s.Objects.Rewrite(s.bucket, sourcePath, destBucket, destPath, object)
 	call.Context(ctx)
 	s.setGeneration(func(generation int64) {
 		call.IfGenerationMatch(generation)
 	}, func(generation int64) {
 		call.IfGenerationNotMatch(generation)
 	}, options)
-
 	return runWithRetries(ctx, func() error {
 		_, err = call.Do()
 		return err
