@@ -73,11 +73,9 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 	}, options)
 	return runWithRetries(ctx, func() error {
 		output, err := call.Do()
-		if err == nil {
-			for ; output.RewriteToken != ""; {
-				call.RewriteToken(output.RewriteToken)
-				output, err = call.Do()
-			}
+		for ; err == nil && output.RewriteToken != ""; {
+			call.RewriteToken(output.RewriteToken)
+			output, err = call.Do()
 		}
 		return err
 	}, s)
