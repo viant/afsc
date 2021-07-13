@@ -76,7 +76,7 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 		if err == nil {
 			for ; output.RewriteToken != ""; {
 				call.RewriteToken(output.RewriteToken)
-				_, err = call.Do()
+				output, err = call.Do()
 			}
 		}
 		return err
