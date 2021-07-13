@@ -72,7 +72,13 @@ func (s *storager) copy(ctx context.Context, sourcePath, destBucket, destPath st
 		call.IfGenerationNotMatch(generation)
 	}, options)
 	return runWithRetries(ctx, func() error {
-		_, err = call.Do()
+		output, err := call.Do()
+		if err == nil {
+			if output.RewriteToken != "" {
+				call.RewriteToken(output.RewriteToken)
+				_, err = call.Do()
+			}
+		}
 		return err
 	}, s)
 }
