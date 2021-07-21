@@ -40,8 +40,8 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	checksum := &option.SkipChecksum{}
 	meta := &content.Meta{}
 	serverSideEncryption := &option.ServerSideEncryption{}
-	option.Assign(options, &md5Hash, &key, &checksum, &meta, &serverSideEncryption)
-
+	stream := &option.Stream{}
+	option.Assign(options, &md5Hash, &key, &checksum, &meta, &serverSideEncryption, &stream)
 	if !checksum.Skip {
 		input := &s3.PutObjectInput{
 			Bucket:   &s.bucket,
@@ -91,6 +91,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		sess = session.New(s.config)
 	}
 	uploader := s3manager.NewUploader(sess)
+	if stream.PartSize > 0 {
+		uploader.PartSize = int64(stream.PartSize)
+	}
 	input := &s3manager.UploadInput{
 		Bucket:   aws.String(s.bucket),
 		Key:      aws.String(destination),
