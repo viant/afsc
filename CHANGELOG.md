@@ -1,3 +1,6 @@
+## August 5th 2021 1.6.0
+* Added support for option.Grant
+
 ## June 7 2021 1.5.0
 * Added copy/move support over 5GB to aws
 

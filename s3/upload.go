@@ -41,7 +41,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	meta := &content.Meta{}
 	serverSideEncryption := &option.ServerSideEncryption{}
 	stream := &option.Stream{}
+	grant := &option.Grant{}
 	option.Assign(options, &md5Hash, &key, &checksum, &meta, &serverSideEncryption, &stream)
+	_, hasGrant := option.Assign(options, &grant)
 	if !checksum.Skip {
 		input := &s3.PutObjectInput{
 			Bucket:   &s.bucket,
@@ -58,6 +60,21 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		s.updateChecksum(input, md5Hash, content)
 		input.Metadata[contentMD5MetaKey] = input.ContentMD5
 		input.Body = bytes.NewReader(content)
+
+		if hasGrant {
+			if grant.FullControl != "" {
+				input.GrantFullControl = &grant.FullControl
+			}
+			if grant.FullControl != "" {
+				input.GrantRead = &grant.Read
+			}
+			if grant.FullControl != "" {
+				input.GrantReadACP = &grant.ReadACP
+			}
+			if grant.FullControl != "" {
+				input.GrantWriteACP = &grant.WriteACP
+			}
+		}
 
 		if len(key.Key) > 0 {
 			input.SetSSECustomerKey(string(key.Key))
@@ -100,7 +117,20 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		Body:     reader,
 		Metadata: map[string]*string{},
 	}
-
+	if hasGrant {
+		if grant.FullControl != "" {
+			input.GrantFullControl = &grant.FullControl
+		}
+		if grant.FullControl != "" {
+			input.GrantRead = &grant.Read
+		}
+		if grant.FullControl != "" {
+			input.GrantReadACP = &grant.ReadACP
+		}
+		if grant.FullControl != "" {
+			input.GrantWriteACP = &grant.WriteACP
+		}
+	}
 	if len(meta.Values) > 0 {
 		for k := range meta.Values {
 			value := meta.Values[k]
@@ -134,6 +164,8 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 	return err
 }
+
+
 
 func updateMetaContent(meta *content.Meta, input *s3.PutObjectInput) {
 	if len(meta.Values) > 0 {
