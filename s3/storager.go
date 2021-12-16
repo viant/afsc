@@ -144,7 +144,7 @@ func (s *storager) adjustRegionIfNeeded() {
 			s.S3 = s3.New(session.New(), s.config)
 		}
 	} else if s.config != nil {
-		if s.config.Region != nil && *s.config.Region != awsDefaultRegion {
+		if s.config.Region == nil || (s.config.Region != nil && *s.config.Region != awsDefaultRegion) {
 			s.config.Region = &awsDefaultRegion
 			s.S3 = s3.New(session.New(), s.config)
 		}
