@@ -116,20 +116,22 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get aws config")
 	}
-
-	if result.config != nil {
-		result.S3 = s3.New(session.New(), result.config)
-	} else {
-		result.S3 = s3.New(session.New())
-	}
-
-	if result.S3.Config.Region == nil || *result.S3.Config.Region == "" {
-		result.S3.Config.Region = &awsDefaultRegion
-		result.Config.Region = &awsDefaultRegion
-		result.S3 = s3.New(session.New(), result.config)
-	}
-	result.adjustRegionIfNeeded()
+	result.initS3Client()
 	return result, nil
+}
+
+func (s *storager) initS3Client() {
+	if s.config != nil {
+		s.S3 = s3.New(session.New(), s.config)
+	} else {
+		s.S3 = s3.New(session.New())
+	}
+	if s.S3.Config.Region == nil || *s.S3.Config.Region == "" {
+		s.S3.Config.Region = &awsDefaultRegion
+		s.Config.Region = &awsDefaultRegion
+		s.S3 = s3.New(session.New(), s.config)
+	}
+	s.adjustRegionIfNeeded()
 }
 
 func (s *storager) adjustRegionIfNeeded() {
@@ -148,6 +150,5 @@ func (s *storager) adjustRegionIfNeeded() {
 			s.config.Region = &awsDefaultRegion
 			s.S3 = s3.New(session.New(), s.config)
 		}
-
 	}
 }

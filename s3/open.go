@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -61,6 +62,9 @@ func (s *storager) Open(ctx context.Context, location string, options ...storage
 	_, err = downloader.DownloadWithContext(ctx, writer, input)
 	data := writer.Bytes()
 	if err != nil {
+		if err == credentials.ErrNoValidProvidersFoundInChain {
+			s.initS3Client()
+		}
 		return nil, errors.Wrapf(err, "failed to download: s3://%v/%v", s.bucket, location)
 	}
 	return ioutil.NopCloser(bytes.NewReader(data)), nil

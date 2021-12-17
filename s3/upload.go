@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -90,6 +91,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 
 		_, err = s.PutObjectWithContext(ctx, input)
 		if err != nil {
+			if err == credentials.ErrNoValidProvidersFoundInChain {
+				s.initS3Client()
+			}
 			if strings.Contains(err.Error(), noSuchBucketMessage) {
 				if err = s.createBucket(ctx); err != nil {
 					return err
