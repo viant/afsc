@@ -115,6 +115,12 @@ func main() {
 - [GCP Google Storage](gs)
 - [AWS - S3](s3)
 
+## Secret stores
+
+- [GCP Google Secret Manager](gcp/secretmanager)
+- [AWS - Secret Manager](s3/secretmanager)
+- [AWS - System Manager - Parameter](s3/ssm)
+
 ## GoCover
 
 [![GoCover](https://gocover.io/github.com/viant/afsc)](https://gocover.io/github.com/viant/afsc)

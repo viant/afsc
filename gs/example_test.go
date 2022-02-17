@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/viant/afs"
 	"github.com/viant/afs/option"
+	"github.com/viant/afsc/auth"
 	"github.com/viant/afsc/gs"
 	goption "google.golang.org/api/option"
 	"io/ioutil"
@@ -97,7 +98,7 @@ func ExampleNewJwtConfig() {
 
 	ctx := context.Background()
 	secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
-	jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
+	jwtConfig, err := auth.NewJwtConfig(option.NewLocation(secretPath))
 	if err != nil {
 		log.Fatal(err)
 
@@ -116,7 +117,7 @@ func ExampleNewJwtConfig() {
 
 func ExampleNewClientOptions() {
 	secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
-	jwtConfig, err := gs.NewJwtConfig(option.NewLocation(secretPath))
+	jwtConfig, err := auth.NewJwtConfig(option.NewLocation(secretPath))
 	if err != nil {
 		log.Fatal(err)
 	}

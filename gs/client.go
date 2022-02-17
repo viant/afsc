@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
+	"github.com/viant/afsc/auth"
 	"golang.org/x/oauth2"
 	gstorage "google.golang.org/api/storage/v1"
 	"net"
@@ -34,7 +35,7 @@ func (c *client) disableProxy() {
 }
 
 func newClient(ctx context.Context, options []storage.Option) (*client, error) {
-	var jwTProvider JWTProvider
+	var jwTProvider auth.JWTProvider
 	var scopes = make(Scopes, 0)
 	proxy := &option.Proxy{}
 

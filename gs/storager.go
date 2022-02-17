@@ -9,6 +9,7 @@ import (
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+	"github.com/viant/afsc/auth"
 	"golang.org/x/oauth2/jwt"
 	goption "google.golang.org/api/option"
 	gstorage "google.golang.org/api/storage/v1"
@@ -50,7 +51,7 @@ func (s storager) filterAuthOption(options []storage.Option) (config *jwt.Config
 	if _, ok := option.Assign(options, &config); ok {
 		return config, nil
 	}
-	var provider JWTProvider
+	var provider auth.JWTProvider
 	if _, ok := option.Assign(options, &provider); ok {
 		config, _, err = provider.JWTConfig(gstorage.CloudPlatformScope, gstorage.DevstorageFullControlScope)
 	}

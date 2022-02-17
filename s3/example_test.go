@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/viant/afs"
 	"github.com/viant/afs/option"
+	"github.com/viant/afsc/auth"
 	"github.com/viant/afsc/gs"
 	"github.com/viant/afsc/s3"
 	"io/ioutil"
@@ -155,7 +156,7 @@ func Example_Streaming() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	jwtConfig, err := gs.NewJwtConfig()
+	jwtConfig, err := auth.NewJwtConfig()
 	if err != nil {
 		log.Fatal(err)
 	}

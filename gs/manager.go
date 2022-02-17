@@ -39,7 +39,7 @@ func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, o
 	return m.Upload(ctx, destURL, file.DefaultFileOsMode, reader, uploadOptions...)
 }
 
-//Move moves data from source to dest
+//Copy moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	gsStorager, err := m.Storager(ctx, sourceURL, options)
 	if err != nil {

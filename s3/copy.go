@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxCopySize = 5  * 1024 * 1024 * 1024
+	maxCopySize = 5 * 1024 * 1024 * 1024
 )
 
 func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
@@ -45,7 +45,6 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 	if err != nil {
 		return err
 	}
-
 
 	copyInput := &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),

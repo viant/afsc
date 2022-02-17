@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
+	"github.com/viant/afsc/auth"
 	"os"
 	"path"
 	"time"
@@ -17,15 +18,15 @@ var TestProject = "viant-e2e"
 var TestBucket = fmt.Sprintf("%v-test%v", TestProject, time.Now().Format("2006-01-02"))
 
 //NewTestJwtConfig returns a jwt config
-func NewTestJwtConfig() (*JwtConfig, error) {
+func NewTestJwtConfig() (*auth.JwtConfig, error) {
 	secretPath := path.Join(os.Getenv("HOME"), ".secret", "gcp-e2e.json")
-	return NewJwtConfig(option.NewLocation(secretPath))
+	return auth.NewJwtConfig(option.NewLocation(secretPath))
 }
 
 //NewCustomTestJwtConfig returns a custom jwt confi
-func NewCustomTestJwtConfig(cred string) (*JwtConfig, error) {
+func NewCustomTestJwtConfig(cred string) (*auth.JwtConfig, error) {
 	secretPath := path.Join(os.Getenv("HOME"), ".secret", cred+".json")
-	return NewJwtConfig(option.NewLocation(secretPath))
+	return auth.NewJwtConfig(option.NewLocation(secretPath))
 }
 
 //NewTestStorager returns a test instance

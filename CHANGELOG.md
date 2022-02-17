@@ -1,3 +1,6 @@
+## Feb 17 2022 1.8.0
+* Added secret stores
+
 ## August 5th 2021 1.6.0
 * Added support for option.Grant
 

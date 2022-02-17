@@ -1,4 +1,4 @@
-package gs
+package auth
 
 import (
 	"bytes"

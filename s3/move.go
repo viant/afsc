@@ -39,14 +39,14 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 	if err != nil {
 		return err
 	}
-	copyInput :=  &s3.CopyObjectInput{
+	copyInput := &s3.CopyObjectInput{
 		CopySource: aws.String(s.bucket + "/" + sourcePath),
 		Key:        &destPath,
 		Bucket:     &destBucket,
 	}
 	if source.Size() >= maxCopySize {
 		copyer := newCopyer(s.S3, source, defaultPartSize, copyInput)
-		err =  copyer.copy(ctx)
+		err = copyer.copy(ctx)
 	} else {
 		_, err = s.S3.CopyObjectWithContext(ctx, copyInput)
 	}
