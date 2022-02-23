@@ -118,8 +118,8 @@ func main() {
 ## Secret stores
 
 - [GCP Google Secret Manager](gcp/secretmanager)
-- [AWS - Secret Manager](s3/secretmanager)
-- [AWS - System Manager - Parameter](s3/ssm)
+- [AWS - Secret Manager](aws/secretmanager)
+- [AWS - System Manager - Parameter](aws/ssm)
 
 ## GoCover
 
