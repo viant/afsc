@@ -1,3 +1,6 @@
+## May 21 2022 1.8.0
+* Added presign option support in gs
+
 ## Feb 17 2022 1.8.0
 * Added secret stores
 
