@@ -104,7 +104,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	if int64(gobject.Size) != sizer.Size() {
 		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), gobject.Size)
 	}
-	return err
+	return s.presign(ctx, destination, options)
 }
 
 func updateMetaContent(meta *content.Meta, gobject *gstorage.Object) {

@@ -15,7 +15,7 @@ func Test_NewResource(t *testing.T) {
 			resourceID: "us-west-1/secret/prod/my/test2",
 			expect: Resource{
 				Region: "us-west-1",
-				Secret: "prod/my/test2-xsSXy1",
+				Secret: "prod/my/test2",
 			},
 		},
 		{
