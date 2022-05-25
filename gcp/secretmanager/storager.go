@@ -63,6 +63,7 @@ func NewStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	if len(gcpOptions) == 0 {
 		gcpOptions = make(gs.ClientOptions, 0)
 	}
+	gcpOptions = append(gs.DefaultOptions, gcpOptions...)
 	client, err := secretmanager.NewClient(ctx, gcpOptions...)
 	if err != nil {
 		return nil, err

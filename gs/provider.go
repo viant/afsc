@@ -19,6 +19,7 @@ func getDefaultHTTPClient(ctx context.Context, scopes []string) (*http.Client, e
 		goptions.WithScopes(scopes...),
 		goptions.WithUserAgent(UserAgent),
 	}
+	o = append(DefaultOptions, o...)
 	httpClient, _, err := htransport.NewClient(ctx, o...)
 	return httpClient, err
 }
@@ -30,6 +31,14 @@ func getDefaultProject(ctx context.Context, scopes []string) (string, error) {
 	}
 	return credentials.ProjectID, nil
 }
+
+//SetOptions set global default options
+func SetOptions(options ...goptions.ClientOption) {
+	DefaultOptions = options
+}
+
+//DefaultOptions represents default client option
+var DefaultOptions []goptions.ClientOption
 
 //DefaultHTTPClientProvider defaultHTTP client
 var DefaultHTTPClientProvider = getDefaultHTTPClient
