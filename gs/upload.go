@@ -81,6 +81,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 		call.Media(reader, mediaOpts...).Projection("full")
 	}
+
 	gobject, err = s.uploadWithRetires(ctx, call, content)
 	if isBucketNotFound(err) {
 		if createErr := s.createBucket(ctx); createErr != nil {
@@ -88,14 +89,13 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 		gobject, err = call.Do()
 	}
-
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload: gs://%v/%v", s.bucket, destination)
 		return err
 	}
 	sizer, ok := reader.(storage.Sizer)
 	if !ok {
-		return nil
+		return s.presign(ctx, destination, options)
 	}
 	if newObject != nil {
 		info, _ := newFileInfo(gobject)
@@ -103,6 +103,9 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	}
 	if int64(gobject.Size) != sizer.Size() {
 		err = errors.Errorf("corrupted upload: gs://%v/%v expected size: %v, but had: %v", s.bucket, destination, sizer.Size(), gobject.Size)
+	}
+	if err != nil {
+		return err
 	}
 	return s.presign(ctx, destination, options)
 }
