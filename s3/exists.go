@@ -3,6 +3,8 @@ package s3
 import (
 	"context"
 	"github.com/viant/afs/storage"
+	"path"
+	"strings"
 )
 
 //Exists returns true if object exists
@@ -11,5 +13,9 @@ func (s *storager) Exists(ctx context.Context, location string, options ...stora
 	if isNotFound(err) {
 		err = nil
 	}
-	return object != nil, err
+	name := location
+	if strings.Index(location, "/") != -1 {
+		_, name = path.Split(location)
+	}
+	return object.Name() == name, err
 }
