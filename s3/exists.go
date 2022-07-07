@@ -13,6 +13,9 @@ func (s *storager) Exists(ctx context.Context, location string, options ...stora
 	if isNotFound(err) {
 		err = nil
 	}
+	if object == nil {
+		return false, nil
+	}
 	name := location
 	if strings.Index(location, "/") != -1 {
 		_, name = path.Split(location)
