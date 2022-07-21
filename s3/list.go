@@ -83,11 +83,13 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 	var files int
 	err := s.ListObjectsPagesWithContext(ctx, input, func(output *s3.ListObjectsOutput, lastPage bool) bool {
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
-		s.addFiles(parent, result, output.Contents, page, matcher)
+		assets := exactMatched(output, input)
+		s.addFiles(parent, result, assets, page, matcher)
 		folders = len(output.CommonPrefixes)
 		files = len(output.Contents)
 		return (!page.HasReachedLimit()) && !lastPage
 	})
+
 	if files == 1 && folders == 0 {
 		return nil
 	}
@@ -97,6 +99,7 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 		}
 		err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
 	}
+
 	input = &s3.ListObjectsInput{
 		Bucket:    aws.String(s.bucket),
 		Prefix:    aws.String(parent + "/"),
@@ -110,4 +113,19 @@ func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInf
 	})
 
 	return err
+}
+
+func exactMatched(output *s3.ListObjectsOutput, input *s3.ListObjectsInput) []*s3.Object {
+	var assets = []*s3.Object{}
+	if len(output.Contents) == 0 {
+		return assets
+	}
+	for i, match := range output.Contents {
+
+		if len(*match.Key) > len(*input.Prefix) {
+			continue
+		}
+		assets = append(assets, output.Contents[i])
+	}
+	return assets
 }
