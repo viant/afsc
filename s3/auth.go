@@ -3,15 +3,20 @@ package s3
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/pkg/errors"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/pkg/errors"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 )
 
 //AwsConfigProvider represents aws config provider
@@ -26,14 +31,46 @@ type AuthConfig struct {
 	Region    string `json:",omitempty"`
 	AccountID string `json:"-"`
 	Token     string `json:"-"`
+	RoleArn   string `json:",omitempty"`
 }
 
 //AwsConfig returns aws config
 func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
+
+	if c.RoleArn != "" {
+
+		sess, err := session.NewSession(&aws.Config{
+			Region:      aws.String(os.Getenv("AWS_REGION")),
+			Credentials: credentials.NewStaticCredentials(c.Key, c.Secret, ""),
+		})
+		if err != nil {
+			fmt.Println("NewSession Error", err)
+			return nil, err
+		}
+
+		svc := sts.New(sess)
+
+		roleToAssumeArn := c.RoleArn
+		sessionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME") + "_session"
+		result, err := svc.AssumeRole(&sts.AssumeRoleInput{
+			RoleArn:         &roleToAssumeArn,
+			RoleSessionName: &sessionName,
+		})
+
+		if err != nil {
+			log.Println("AssumeRole Error", err)
+			return nil, err
+		}
+
+		c.Key = *result.Credentials.AccessKeyId
+		c.Secret = *result.Credentials.SecretAccessKey
+		c.Token = *result.Credentials.SessionToken
+	}
+
 	awsCredentials := credentials.NewStaticCredentials(c.Key, c.Secret, c.Token)
 	_, err := awsCredentials.Get()
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid credentials")
+		return nil, fmt.Errorf("invalid credentials %w", err)
 	}
 	return aws.NewConfig().WithRegion(c.Region).WithCredentials(awsCredentials), nil
 }
