@@ -3,12 +3,12 @@ package s3
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -26,30 +26,29 @@ type AwsConfigProvider interface {
 
 //AuthConfig represents an auth config
 type AuthConfig struct {
-	Key       string `json:",omitempty"`
-	Secret    string `json:",omitempty"`
-	Region    string `json:",omitempty"`
-	AccountID string `json:"-"`
-	Token     string `json:"-"`
-	RoleArn   string `json:",omitempty"`
+	Key       string    `json:",omitempty"`
+	Secret    string    `json:",omitempty"`
+	Region    string    `json:",omitempty"`
+	AccountID string    `json:"-"`
+	Token     string    `json:"-"`
+	Expiry    time.Time `json:"-"`
+	RoleArn   string    `json:",omitempty"`
 }
 
 //AwsConfig returns aws config
 func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(os.Getenv("AWS_REGION")),
+		Credentials: credentials.NewStaticCredentials(c.Key, c.Secret, ""),
+	})
+	if err != nil {
+		log.Println("NewSession Error", err)
+		return nil, err
+	}
 
-	if c.RoleArn != "" {
+	svc := sts.New(sess)
 
-		sess, err := session.NewSession(&aws.Config{
-			Region:      aws.String(os.Getenv("AWS_REGION")),
-			Credentials: credentials.NewStaticCredentials(c.Key, c.Secret, ""),
-		})
-		if err != nil {
-			fmt.Println("NewSession Error", err)
-			return nil, err
-		}
-
-		svc := sts.New(sess)
-
+	if c.RoleArn != "" && c.Token == "" {
 		roleToAssumeArn := c.RoleArn
 		sessionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME") + "_session"
 		result, err := svc.AssumeRole(&sts.AssumeRoleInput{
@@ -58,19 +57,24 @@ func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
 		})
 
 		if err != nil {
-			log.Println("AssumeRole Error", err)
 			return nil, err
 		}
 
 		c.Key = *result.Credentials.AccessKeyId
 		c.Secret = *result.Credentials.SecretAccessKey
 		c.Token = *result.Credentials.SessionToken
+		c.Expiry = *result.Credentials.Expiration
+	}
+
+	// Functions running for 8 hrs (Max expiration time) need to assume role again
+	if time.Now().After(c.Expiry) {
+		c.Token = ""
 	}
 
 	awsCredentials := credentials.NewStaticCredentials(c.Key, c.Secret, c.Token)
-	_, err := awsCredentials.Get()
+	_, err = awsCredentials.Get()
 	if err != nil {
-		return nil, fmt.Errorf("invalid credentials %w", err)
+		return nil, errors.Wrap(err, "invalid credentials")
 	}
 	return aws.NewConfig().WithRegion(c.Region).WithCredentials(awsCredentials), nil
 }
