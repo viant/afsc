@@ -12,6 +12,7 @@ import (
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/option"
 	"strings"
+	"time"
 
 	"github.com/viant/afs/storage"
 	"io"
@@ -20,6 +21,10 @@ import (
 
 //Open return content reader and hash values if md5 or crc option is supplied or error
 func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+	started := time.Now()
+	defer func() {
+		fmt.Printf("s3:Open %v %s\n", location, time.Since(started))
+	}()
 	var sess *session.Session
 	if s.config == nil {
 		sess = session.New()
