@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -28,11 +27,19 @@ type storager struct {
 	bucket string
 	region string
 	config *aws.Config
+	logger *option.Logger
 }
 
 //Close closes storager
 func (s *storager) Close() error {
 	return nil
+}
+
+func (s storager) logF(format string, args ...interface{}) {
+	if s.logger == nil {
+		return
+	}
+	s.logger.Logf(format, args...)
 }
 
 //FilterAuthOptions filters auth options
@@ -113,12 +120,15 @@ func newStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	result := &storager{
 		bucket: url.Host(baseURL),
 	}
+
 	var err error
 	result.config, err = getAwsConfig(options)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get aws config")
 	}
 	result.initS3Client()
+	result.logger = &option.Logger{}
+	option.Assign(options, &result.logger)
 	return result, nil
 }
 
@@ -139,7 +149,7 @@ func (s *storager) initS3Client() {
 func (s *storager) adjustRegionIfNeeded() {
 	started := time.Now()
 	defer func() {
-		fmt.Printf("s3:GetBucketLocation %v %s\n", s.bucket, time.Since(started))
+		s.logF("s3:GetBucketLocation %v %s\n", s.bucket, time.Since(started))
 	}()
 	output, err := s.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &s.bucket})
 	if err != nil {

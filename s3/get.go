@@ -69,7 +69,7 @@ func (s *storager) assignMetadata(options []storage.Option, object *s3.GetObject
 func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	started := time.Now()
 	defer func() {
-		fmt.Printf("s3:Get %v %s\n", location, time.Since(started))
+		s.logF("s3:Get %v %s\n", location, time.Since(started))
 	}()
 	location = strings.Trim(location, "/")
 	info, err := s.get(ctx, location, options)

@@ -23,7 +23,7 @@ import (
 func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
 	started := time.Now()
 	defer func() {
-		fmt.Printf("s3:Open %v %s\n", location, time.Since(started))
+		s.logF("s3:Open %v %s\n", location, time.Since(started))
 	}()
 	var sess *session.Session
 	if s.config == nil {

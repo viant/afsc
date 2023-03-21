@@ -10,9 +10,14 @@ import (
 	"github.com/viant/afs/storage"
 	"path"
 	"strings"
+	"time"
 )
 
 func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+	started := time.Now()
+	defer func() {
+		s.logF("s3:Move %v-> %v/%v %s\n", sourcePath, destBucket, destPath, time.Since(started))
+	}()
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	source, err := s.get(ctx, sourcePath, options)

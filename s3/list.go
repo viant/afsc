@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -77,7 +76,7 @@ func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.
 func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	started := time.Now()
 	defer func() {
-		fmt.Printf("s3:List %v %s\n", parent, time.Since(started))
+		s.logF("s3:List %v %s\n", parent, time.Since(started))
 	}()
 
 	input := &s3.ListObjectsInput{
