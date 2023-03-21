@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -12,6 +13,7 @@ import (
 	"github.com/viant/afsc/logger"
 	"log"
 	"os"
+	"time"
 )
 
 const (
@@ -135,6 +137,10 @@ func (s *storager) initS3Client() {
 }
 
 func (s *storager) adjustRegionIfNeeded() {
+	started := time.Now()
+	defer func() {
+		fmt.Printf("s3:GetBucketLocation %v %s\n", s.bucket, time.Since(started))
+	}()
 	output, err := s.S3.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: &s.bucket})
 	if err != nil {
 		logger.Logf("unable to get '%v' bucket location: %v", s.bucket, err)
