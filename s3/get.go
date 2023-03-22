@@ -20,10 +20,13 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	location = strings.Trim(location, "/")
 	_, name := path.Split(location)
 
-	object, err := s.GetObject(&s3.GetObjectInput{
-		Bucket: &s.bucket,
-		Key:    &location,
-	})
+	object, err := s.HeadObject(&s3.HeadObjectInput{Bucket: &s.bucket,
+		Key: &location})
+
+	//object, err := s.GetObject(&s3.GetObjectInput{
+	//	Bucket: &s.bucket,
+	//	Key:    &location,
+	//})
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +34,7 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	if !hasObject {
 		return nil, fmt.Errorf(noSuchKeyMessage + " " + location)
 	}
-	s.assignMetadata(options, object)
+	s.assignMetadataWithHead(options, object)
 	contentLength := int64(0)
 	modified := time.Now()
 	if object.LastModified != nil {
@@ -40,9 +43,6 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	if object.ContentLength != nil {
 		contentLength = *object.ContentLength
 	}
-	if object.Body != nil {
-		_ = object.Body.Close()
-	}
 	if err = s.presign(ctx, location, options); err != nil {
 		return nil, err
 	}
@@ -50,6 +50,22 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 }
 
 func (s *storager) assignMetadata(options []storage.Option, object *s3.GetObjectOutput) {
+	meta := &content.Meta{}
+	if _, ok := option.Assign(options, &meta); ok {
+		meta.Values = make(map[string]string)
+		if len(object.Metadata) > 0 {
+			for k, v := range object.Metadata {
+				value := ""
+				if v != nil {
+					value = *v
+				}
+				meta.Values[k] = value
+			}
+		}
+	}
+}
+
+func (s *storager) assignMetadataWithHead(options []storage.Option, object *s3.HeadObjectOutput) {
 	meta := &content.Meta{}
 	if _, ok := option.Assign(options, &meta); ok {
 		meta.Values = make(map[string]string)
