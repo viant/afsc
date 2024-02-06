@@ -18,7 +18,7 @@ func (s *storager) Open(ctx context.Context, location string, options ...storage
 	return reader, err
 }
 
-//Open return content reader and hash values if md5 or crc option is supplied or error
+// Open return content reader and hash values if md5 or crc option is supplied or error
 func (s *storager) open(ctx context.Context, location string, options []storage.Option) (io.ReadCloser, error) {
 	location = strings.Trim(location, "/")
 	call := s.Objects.Get(s.bucket, location)
@@ -58,8 +58,12 @@ func (s *storager) open(ctx context.Context, location string, options []storage.
 	var response *nhttp.Response
 	err = runWithRetries(ctx, func() error {
 		response, err = call.Download()
+		if err != nil && response != nil && response.Body != nil {
+			response.Body.Close()
+		}
 		return err
 	}, s)
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open gs://%v/%v ", s.bucket, location)
 	}

@@ -44,12 +44,17 @@ func (t *reader) Read(dest []byte) (int, error) {
 	var err error
 	err = runWithRetries(t.ctx, func() error {
 		response, err = t.call.Download()
+		if err != nil && response != nil && response.Body != nil {
+			response.Body.Close()
+		}
 		return err
 	}, t.storager)
+	if response.Body != nil {
+		defer response.Body.Close()
+	}
 	if err != nil {
 		return 0, err
 	}
-	defer response.Body.Close()
 	readSoFar := 0
 	for {
 		read, err := response.Body.Read(dest[readSoFar:])
@@ -67,7 +72,7 @@ func (t *reader) Read(dest []byte) (int, error) {
 	return readSoFar, nil
 }
 
-//NewReadSeeker create a reader seeker
+// NewReadSeeker create a reader seeker
 func NewReadSeeker(ctx context.Context, storager *storager, call *storage.ObjectsGetCall, size int) io.ReadSeeker {
 	return &reader{
 		ctx:      ctx,
