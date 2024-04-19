@@ -2,6 +2,10 @@ package s3
 
 import (
 	"context"
+	"log"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -10,9 +14,6 @@ import (
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
 	"github.com/viant/afsc/logger"
-	"log"
-	"os"
-	"time"
 )
 
 const (
@@ -116,7 +117,7 @@ func getAwsConfig(options []storage.Option) (config *aws.Config, err error) {
 	return config, err
 }
 
-func newStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
+func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
 	result := &storager{
 		bucket: url.Host(baseURL),
 	}

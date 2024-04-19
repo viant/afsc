@@ -3,17 +3,17 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/viant/afs"
-	"github.com/viant/afs/option"
-	"github.com/viant/afsc/auth"
-	"github.com/viant/afsc/gs"
-	"github.com/viant/afsc/s3"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/viant/afs"
+	"github.com/viant/afs/option"
+	"github.com/viant/afsc/auth"
+	"github.com/viant/afsc/s3"
 )
 
 func ExampleAfsService() {
@@ -33,7 +33,7 @@ func ExampleAfsService() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,25 +42,25 @@ func ExampleAfsService() {
 }
 
 func ExampleNew() {
-	service := gs.New()
+	service := s3.New()
 	ctx := context.Background()
 	reader, err := service.OpenURL(ctx, "s3://my-bucket/folder/asset")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer reader.Close()
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("data: %s\n", data)
 }
 
-//Example_Storager storager usage example (uses path rather then URLs)
+// Example_Storager storager usage example (uses path rather then URLs)
 func Example_Storager() {
 
 	ctx := context.Background()
-	service, err := gs.NewStorager(ctx, "s3://myBucket/")
+	service, err := s3.NewStorager(ctx, "s3://myBucket/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func Example_Storager() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	fmt.Printf("data: %s\n", data)
 
 	has, _ := service.Exists(ctx, location)
@@ -102,11 +102,11 @@ func ExampleNewAuthConfig() {
 	}
 
 	ctx := context.Background()
-	//add default import _ "github.com/viant/afsc/s3"
+	// add default import _ "github.com/viant/afsc/s3"
 
 	service := afs.New()
 	reader, err := service.OpenURL(ctx, "s3://my-bucket/myfolder/asset.txt", authConfig)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,11 +116,11 @@ func ExampleNewAuthConfig() {
 
 func ExampleAwsConfig() {
 	var awsConfig *aws.Config
-	//get config
+	// get config
 	ctx := context.Background()
 	service := afs.New()
 	reader, err := service.OpenURL(ctx, "s3://my-bucket/myfolder/asset.txt", awsConfig)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func ExampleNewCustomKey() {
 		log.Fatal(err)
 	}
 	reader, err := service.OpenURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
