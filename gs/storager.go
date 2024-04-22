@@ -22,30 +22,30 @@ type storager struct {
 	config *jwt.Config
 }
 
-//Close closes storager
+// Close closes storager
 func (s *storager) Close() error {
 	http.CloseIdleConnections(s.client)
 	return nil
 }
 
-//Bucket returns bucket
+// Bucket returns bucket
 func (s *storager) Bucket(ctx context.Context) (*gstorage.Bucket, error) {
 	call := s.Buckets.Get(s.bucket)
 	call.Context(ctx)
 	return call.Do()
 }
 
-//FilterAuthOptions filters auth options
+// FilterAuthOptions filters auth options
 func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 	var authOptions = make([]storage.Option, 0)
-	if awsConfig, _ := s.filterAuthOption(options); awsConfig != nil {
-		authOptions = append(authOptions, awsConfig)
+	if config, _ := s.filterAuthOption(options); config != nil {
+		authOptions = append(authOptions, config)
 	}
 	return authOptions
 
 }
 
-//FilterAuthOptions filters auth options
+// FilterAuthOptions filters auth options
 func (s storager) filterAuthOption(options []storage.Option) (config *jwt.Config, err error) {
 	config = &jwt.Config{}
 	if _, ok := option.Assign(options, &config); ok {
@@ -58,14 +58,14 @@ func (s storager) filterAuthOption(options []storage.Option) (config *jwt.Config
 	return config, err
 }
 
-//IsAuthChanged return true if auth has changes
+// IsAuthChanged return true if auth has changes
 func (s *storager) IsAuthChanged(options []storage.Option) bool {
 	authOptions := s.FilterAuthOptions(options)
 	changed := s.isAuthChanged(authOptions)
 	return changed
 }
 
-//IsAuthChanged return true if auth has changes
+// IsAuthChanged return true if auth has changes
 func (s *storager) isAuthChanged(authOptions []storage.Option) bool {
 	if len(authOptions) == 0 {
 		return false
@@ -126,7 +126,7 @@ func (s *storager) disableProxy(ctx context.Context) error {
 	return nil
 }
 
-//NewStorager returns new storager
+// NewStorager returns new storager
 func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	return newStorager(ctx, baseURL, options...)
 }

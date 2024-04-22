@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//Get returns an object for supplied location
+// Get returns an object for supplied location
 func (s *storager) get(ctx context.Context, location string, options []storage.Option) (os.FileInfo, error) {
 	object, err := s.getObject(ctx, location, options)
 	if object != nil {
@@ -20,7 +20,7 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	return nil, err
 }
 
-//Get returns an object for supplied location
+// Get returns an object for supplied location
 func (s *storager) getObject(ctx context.Context, location string, options []storage.Option) (object *gstorage.Object, err error) {
 	location = strings.Trim(location, "/")
 	objectCall := s.Objects.Get(s.bucket, location)
@@ -56,7 +56,7 @@ func (s *storager) getObject(ctx context.Context, location string, options []sto
 	return object, err
 }
 
-//Get returns an object for supplied location
+// Get returns an object for supplied location
 func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	info, err := s.get(ctx, location, options)
 	if err == nil {
