@@ -23,7 +23,7 @@ type manager struct {
 
 func (m *manager) provider(ctx context.Context, baseURL string, options ...storage.Option) (storage.Storager, error) {
 	options = m.Options(options)
-	return newStorager(ctx, baseURL, options...)
+	return NewStorager(ctx, baseURL, options...)
 }
 
 func (m *manager) copyInMemory(ctx context.Context, sourceURL, destURL string, options []storage.Option) error {

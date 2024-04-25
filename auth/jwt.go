@@ -3,25 +3,25 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
-	"io/ioutil"
-	"os"
 )
 
-//JWTProvider represetns JWT based auth provider
+// JWTProvider represents JWT based auth provider
 type JWTProvider interface {
 	JWTConfig(scopes ...string) (config *jwt.Config, projectID string, err error)
 }
 
-//JwtConfig represents google service account secrets
+// JwtConfig represents google service account secrets
 type JwtConfig struct {
-	//google cloud credential
+	// google cloud credential
 	ClientEmail             string `json:"client_email,omitempty"`
-	TokenURL                string `json:"token_uri,omitempty"`
+	TokenURL                string `json:"token_url,omitempty"`
 	PrivateKey              string `json:"private_key,omitempty"`
 	PrivateKeyID            string `json:"private_key_id,omitempty"`
 	ProjectID               string `json:"project_id,omitempty"`
@@ -32,7 +32,7 @@ type JwtConfig struct {
 	jwtClientConfig         *jwt.Config
 }
 
-//JWTConfig returns new JWT config for supplied scopes
+// JWTConfig returns new JWT config for supplied scopes
 func (c *JwtConfig) JWTConfig(scopes ...string) (config *jwt.Config, projectID string, err error) {
 	if c.jwtClientConfig != nil {
 		return c.jwtClientConfig, c.ProjectID, nil
@@ -46,13 +46,13 @@ func (c *JwtConfig) JWTConfig(scopes ...string) (config *jwt.Config, projectID s
 		TokenURL:     c.TokenURL,
 	}
 	if result.TokenURL == "" {
-		result.TokenURL = google.JWTTokenURL
+		result.TokenURL = "https://oauth2.googleapis.com/token"
 	}
 	c.jwtClientConfig = result
 	return result, c.ProjectID, nil
 }
 
-//NewJwtConfig returns new secrets from location
+// NewJwtConfig returns new secrets from location
 func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 	location := &option.Location{}
 	var JSONPayload = make([]byte, 0)
@@ -67,7 +67,7 @@ func NewJwtConfig(options ...storage.Option) (*JwtConfig, error) {
 			return nil, errors.Wrap(err, "failed to open auth config")
 		}
 		defer func() { _ = file.Close() }()
-		if JSONPayload, err = ioutil.ReadAll(file); err != nil {
+		if JSONPayload, err = io.ReadAll(file); err != nil {
 			return nil, err
 		}
 	}

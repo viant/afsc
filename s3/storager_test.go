@@ -34,6 +34,6 @@ func NewTestStorager(ctx context.Context, bucket string) (storage.Storager, erro
 	if err != nil {
 		return nil, err
 	}
-	return newStorager(ctx, fmt.Sprintf("s3://%s", bucket), authConfig)
+	return NewStorager(ctx, fmt.Sprintf("s3://%s", bucket), authConfig)
 
 }
