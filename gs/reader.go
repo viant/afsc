@@ -49,12 +49,16 @@ func (t *reader) Read(dest []byte) (int, error) {
 		}
 		return err
 	}, t.storager)
-	if response.Body != nil {
-		defer response.Body.Close()
-	}
 	if err != nil {
 		return 0, err
 	}
+	if response == nil {
+		return 0, errors.New("response was empty")
+	}
+	if response.Body == nil {
+		return 0, errors.New("response body was empty")
+	}
+	defer response.Body.Close()
 	readSoFar := 0
 	for {
 		read, err := response.Body.Read(dest[readSoFar:])
