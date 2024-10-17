@@ -3,10 +3,11 @@ package s3
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/storage"
-	"testing"
 )
 
 func TestStorager_Exists(t *testing.T) {

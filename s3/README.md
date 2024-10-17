@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/viant/afs"
 	_ "github.com/viant/afsc/s3"
-	"io/ioutil"
+	"io/io"
 	"log"
 )
 
@@ -30,7 +30,7 @@ func main() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +71,7 @@ _Example:_
 
 	service := afs.New()
 	reader, err := service.DownloadWithURL(ctx, "s3://my-bucket/myfolder/asset.txt", authConfig)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,7 +103,7 @@ md5 is computed for supplied content.
    		log.Fatal(err)
    	}
    	reader, err := service.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
-   	data, err := ioutil.ReadAll(reader)
+   	data, err := io.ReadAll(reader)
    	if err != nil {
    		log.Fatal(err)
    	}

@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/viant/afs"
-	"github.com/viant/afs/option"
-	"github.com/viant/afsc/auth"
-	"github.com/viant/afsc/gs"
-	goption "google.golang.org/api/option"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/viant/afs"
+	"github.com/viant/afs/option"
+	goption "google.golang.org/api/option"
+
+	"github.com/viant/afsc/auth"
+	"github.com/viant/afsc/gs"
 )
 
 func ExampleAfsService() {
@@ -33,7 +35,7 @@ func ExampleAfsService() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -49,14 +51,14 @@ func ExampleNew() {
 		log.Fatal(err)
 	}
 	defer reader.Close()
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("data: %s\n", data)
 }
 
-//Example_Storager storager usage example (uses path rather then URLs)
+// Example_Storager storager usage example (uses path rather then URLs)
 func Example_Storager() {
 
 	ctx := context.Background()
@@ -73,7 +75,7 @@ func Example_Storager() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	fmt.Printf("data: %s\n", data)
 
 	has, _ := service.Exists(ctx, location)
@@ -103,11 +105,11 @@ func ExampleNewJwtConfig() {
 		log.Fatal(err)
 
 	}
-	//add default import _ "github.com/viant/afsc/gs"
+	// add default import _ "github.com/viant/afsc/gs"
 
 	service := afs.New()
 	reader, err := service.OpenURL(ctx, "gs://my-bucket/myfolder/asset.txt", jwtConfig)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,7 +129,7 @@ func ExampleNewClientOptions() {
 
 	service := afs.New()
 	reader, err := service.OpenURL(ctx, "gs://my-bucket/myfolder/asset.txt", gs.NewClientOptions(jsonAuth), gs.NewProject("myproject"))
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,7 +148,7 @@ func ExampleNewCustomKey() {
 		log.Fatal(err)
 	}
 	reader, err := service.OpenURL(ctx, "gs://mybucket/folder/secret1.txt", customKey)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}

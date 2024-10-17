@@ -2,16 +2,18 @@ package ssm
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/viant/afs/file"
-	"github.com/viant/afs/storage"
 	"os"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/storage"
 )
 
-//List lists secret resources
-func (s *storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
+// List lists secret resources
+func (s *Storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
 	var result []os.FileInfo
 	resource, err := newResource(resourceID)
 	if err != nil {
@@ -22,10 +24,10 @@ func (s *storager) List(ctx context.Context, resourceID string, options ...stora
 	var info []os.FileInfo
 	for {
 		var nextToken *string
-		output, err := client.GetParametersByPathWithContext(ctx, &ssm.GetParametersByPathInput{ParameterFilters: []*ssm.ParameterStringFilter{
+		output, err := client.GetParametersByPath(ctx, &ssm.GetParametersByPathInput{ParameterFilters: []types.ParameterStringFilter{
 			{
 				Key:    aws.String("name"),
-				Values: []*string{aws.String(resource.Name)},
+				Values: []string{resource.Name},
 			},
 		}, NextToken: nextToken})
 		if err != nil {

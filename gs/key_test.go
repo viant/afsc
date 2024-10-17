@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/url"
-	"io/ioutil"
-	"strings"
-	"testing"
 )
 
 func TestAES256Key_SetHeader(t *testing.T) {
@@ -72,7 +73,7 @@ func TestAES256Key_SetHeader(t *testing.T) {
 			continue
 		}
 
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		assert.EqualValues(t, useCase.data, data, useCase.description)
 
 	}

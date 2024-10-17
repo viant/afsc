@@ -3,11 +3,12 @@ package s3
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"io"
+
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
-	"io"
 )
 
 type reader struct {
@@ -43,7 +44,7 @@ func (t *reader) Read(dest []byte) (int, error) {
 	rangeLiteral := fmt.Sprintf(base.RangeHeaderTmpl, from, to)
 	t.input.Range = &rangeLiteral
 	t.writer.Reset()
-	_, err := t.downloader.DownloadWithContext(t.ctx, t.writer, t.input)
+	_, err := t.downloader.Download(t.ctx, t.writer, t.input)
 	if err != nil {
 		return 0, err
 	}
@@ -51,7 +52,7 @@ func (t *reader) Read(dest []byte) (int, error) {
 	return copied, nil
 }
 
-//NewReadSeeker create a reader seeker
+// NewReadSeeker create a reader seeker
 func NewReadSeeker(ctx context.Context, input *s3.GetObjectInput, downloader *s3manager.Downloader, partSize, size int) io.ReadSeeker {
 	return &reader{
 		ctx:        ctx,

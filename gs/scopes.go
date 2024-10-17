@@ -1,9 +1,9 @@
 package gs
 
-//Scopes represents storage scopes
+// Scopes represents storage scopes
 type Scopes []string
 
-//NewScopes create scopes
+// NewScopes create scopes
 func NewScopes(scopes ...string) Scopes {
 	return scopes
 }

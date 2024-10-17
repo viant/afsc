@@ -2,13 +2,14 @@ package gs
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
-	"os"
-	"strings"
 )
 
 // Get returns an object for supplied location

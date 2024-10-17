@@ -3,14 +3,15 @@ package gs
 import (
 	"context"
 	"fmt"
+	"io"
+	nhttp "net/http"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"io"
-	nhttp "net/http"
-	"strings"
 )
 
 func (s *storager) Open(ctx context.Context, location string, options ...storage.Option) (reader io.ReadCloser, err error) {

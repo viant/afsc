@@ -3,23 +3,22 @@ package s3
 import (
 	"bytes"
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"io"
+	"os"
+	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
-	"io"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
-//Upload uploads content
-func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+// Upload uploads content
+func (s *Storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	err := s.upload(ctx, destination, mode, reader, options)
 	if err != nil {
@@ -28,14 +27,14 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	return s.presign(ctx, destination, options)
 }
 
-func (s *storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5, data []byte) {
+func (s *Storager) updateChecksum(input *s3.PutObjectInput, md5Hash *option.Md5, data []byte) {
 	if len(md5Hash.Hash) == 0 {
 		md5Hash = option.NewMd5(data)
 	}
 	input.ContentMD5 = aws.String(md5Hash.Encode())
 }
 
-func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
+func (s *Storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	md5Hash := &option.Md5{}
 	key := &option.AES256Key{}
 	checksum := &option.SkipChecksum{}
@@ -49,21 +48,21 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		input := &s3.PutObjectInput{
 			Bucket:   &s.bucket,
 			Key:      aws.String(destination),
-			Metadata: map[string]*string{},
+			Metadata: map[string]string{},
 		}
 
 		updateMetaContent(meta, input)
 
-		content, err := ioutil.ReadAll(reader)
+		contentBytes, err := io.ReadAll(reader)
 		if err != nil {
 			return err
 		}
-		s.updateChecksum(input, md5Hash, content)
-		input.Metadata[contentMD5MetaKey] = input.ContentMD5
-		input.Body = bytes.NewReader(content)
+		s.updateChecksum(input, md5Hash, contentBytes)
+		input.Metadata[contentMD5MetaKey] = *input.ContentMD5
+		input.Body = bytes.NewReader(contentBytes)
 
 		if acl.ACL != "" {
-			input.ACL = &acl.ACL
+			input.ACL = types.ObjectCannedACL(acl.ACL)
 		}
 
 		if grant.FullControl != "" {
@@ -80,26 +79,25 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 
 		if len(key.Key) > 0 {
-			input.SetSSECustomerKey(string(key.Key))
-			input.SetSSECustomerKeyMD5(key.Base64KeyMd5Hash)
-			input.SetSSECustomerAlgorithm(customEncryptionAlgorithm)
+			stringKey := string(key.Key)
+			algorithm := customEncryptionAlgorithm
+			input.SSECustomerKey = &stringKey
+			input.SSECustomerKeyMD5 = &key.Base64KeyMd5Hash
+			input.SSECustomerAlgorithm = &algorithm
 		}
 
 		if serverSideEncryption.Algorithm != "" {
-			input.ServerSideEncryption = aws.String(serverSideEncryption.Algorithm)
+			input.ServerSideEncryption = types.ServerSideEncryption(serverSideEncryption.Algorithm)
 		}
 
-		_, err = s.PutObjectWithContext(ctx, input)
+		_, err = s.PutObject(ctx, input)
 		if err != nil {
-			if err == credentials.ErrNoValidProvidersFoundInChain {
-				s.initS3Client()
-			}
 			if strings.Contains(err.Error(), noSuchBucketMessage) {
 				if err = s.createBucket(ctx); err != nil {
 					return err
 				}
-				input.Body = bytes.NewReader(content)
-				_, err = s.PutObjectWithContext(ctx, input)
+				input.Body = bytes.NewReader(contentBytes)
+				_, err = s.PutObject(ctx, input)
 			}
 		}
 		if err != nil {
@@ -107,21 +105,15 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		}
 		return err
 	}
-	var sess *session.Session
-	if s.config == nil {
-		sess = session.New()
-	} else {
-		sess = session.New(s.config)
-	}
-	uploader := s3manager.NewUploader(sess)
+	uploader := s3manager.NewUploader(s3.NewFromConfig(*s.config))
 	if stream.PartSize > 0 {
 		uploader.PartSize = int64(stream.PartSize)
 	}
-	input := &s3manager.UploadInput{
+	input := &s3.PutObjectInput{
 		Bucket:   aws.String(s.bucket),
 		Key:      aws.String(destination),
 		Body:     reader,
-		Metadata: map[string]*string{},
+		Metadata: map[string]string{},
 	}
 	if grant.FullControl != "" {
 		input.GrantFullControl = &grant.FullControl
@@ -136,7 +128,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		input.GrantWriteACP = &grant.WriteACP
 	}
 	if acl.ACL != "" {
-		input.ACL = &acl.ACL
+		input.ACL = types.ObjectCannedACL(acl.ACL)
 	}
 
 	if len(meta.Values) > 0 {
@@ -153,10 +145,10 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 				input.ContentLanguage = &value
 				continue
 			}
-			input.Metadata[k] = &value
+			input.Metadata[k] = value
 		}
 	}
-	_, err := uploader.Upload(input)
+	_, err := uploader.Upload(context.Background(), input)
 	if err != nil {
 		return err
 	}
@@ -188,7 +180,7 @@ func updateMetaContent(meta *content.Meta, input *s3.PutObjectInput) {
 				input.ContentLanguage = &value
 				continue
 			}
-			input.Metadata[k] = &value
+			input.Metadata[k] = value
 		}
 	}
 }

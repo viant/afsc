@@ -1,13 +1,14 @@
 package gs
 
 import (
-	"github.com/viant/afs/base"
-	"google.golang.org/api/googleapi"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/viant/afs/base"
+	"google.golang.org/api/googleapi"
 )
 
 const notFound = "Not Found"
@@ -20,7 +21,7 @@ const connectionResetCode = 11
 var retryErrors = make(map[int]int)
 var mux = &sync.Mutex{}
 
-//isRetryError returns true if backend error
+// isRetryError returns true if backend error
 func isRetryError(err error) bool {
 	if err == nil {
 		return false
@@ -80,7 +81,7 @@ func sleepBeforeRetry(retry *base.Retry) {
 	time.Sleep(retry.Pause())
 }
 
-//isRetryError returns true if not found
+// isRetryError returns true if not found
 func isNotFound(err error) bool {
 	if err == nil {
 		return false

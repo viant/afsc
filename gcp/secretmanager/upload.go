@@ -2,16 +2,16 @@ package secretmanager
 
 import (
 	"context"
+	"io"
+	"os"
+
 	"github.com/viant/afs/storage"
 	"google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
-//Upload uploads
-func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+// Upload uploads
+func (s *Storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	hasSecret, _ := s.Exists(ctx, destination)
 	resource, err := newResource(destination)
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *storager) Upload(ctx context.Context, destination string, mode os.FileM
 	if err != nil {
 		return err
 	}
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}

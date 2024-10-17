@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/http"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"github.com/viant/afsc/auth"
 	"golang.org/x/oauth2/jwt"
 	goption "google.golang.org/api/option"
 	gstorage "google.golang.org/api/storage/v1"
+
+	"github.com/viant/afsc/auth"
 )
 
 type storager struct {
@@ -36,7 +38,7 @@ func (s *storager) Bucket(ctx context.Context) (*gstorage.Bucket, error) {
 }
 
 // FilterAuthOptions filters auth options
-func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
+func (s *storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 	var authOptions = make([]storage.Option, 0)
 	if config, _ := s.filterAuthOption(options); config != nil {
 		authOptions = append(authOptions, config)
@@ -45,8 +47,8 @@ func (s storager) FilterAuthOptions(options []storage.Option) []storage.Option {
 
 }
 
-// FilterAuthOptions filters auth options
-func (s storager) filterAuthOption(options []storage.Option) (config *jwt.Config, err error) {
+// filterAuthOption filters auth options
+func (s *storager) filterAuthOption(options []storage.Option) (config *jwt.Config, err error) {
 	config = &jwt.Config{}
 	if _, ok := option.Assign(options, &config); ok {
 		return config, nil

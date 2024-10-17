@@ -3,20 +3,21 @@ package s3
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"path"
+	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
-	"path"
-	"strings"
 )
 
 const (
 	maxCopySize = 5 * 1024 * 1024 * 1024
 )
 
-func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+func (s *Storager) Copy(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	sourcePath = strings.Trim(sourcePath, "/")
 	destPath = strings.Trim(destPath, "/")
 	_, err := s.get(ctx, sourcePath, options)
@@ -52,11 +53,11 @@ func (s *storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 		Bucket:     &destBucket,
 	}
 	if source.Size() >= maxCopySize {
-		copyer := newCopyer(s.S3, source, defaultPartSize, copyInput)
+		copyer := newCopyer(s.Client, source, defaultPartSize, copyInput)
 		return copyer.copy(ctx)
 	}
 
-	_, err = s.S3.CopyObjectWithContext(ctx, copyInput)
+	_, err = s.Client.CopyObject(ctx, copyInput)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to copy: s3://%v/%v to s3://%v/%v", s.bucket, sourcePath, destBucket, destPath)
 	}

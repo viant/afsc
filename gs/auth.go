@@ -2,6 +2,7 @@ package gs
 
 import (
 	"fmt"
+
 	"google.golang.org/api/option"
 )
 
@@ -12,11 +13,11 @@ var authOptions = map[string]bool{
 }
 
 func HasAuthOption(options []option.ClientOption) bool {
-	for _, option := range options {
-		if option == nil {
+	for _, authOption := range options {
+		if authOption == nil {
 			continue
 		}
-		if _, ok := authOptions[fmt.Sprintf("%T", option)]; ok {
+		if _, ok := authOptions[fmt.Sprintf("%T", authOption)]; ok {
 			return true
 		}
 	}
@@ -27,11 +28,11 @@ func Options(base, options []option.ClientOption) []option.ClientOption {
 	var result = append([]option.ClientOption{}, options...)
 	hasAuth := HasAuthOption(options)
 	if hasAuth {
-		for _, option := range base {
-			if _, ok := authOptions[fmt.Sprintf("%T", option)]; ok {
+		for _, authOption := range base {
+			if _, ok := authOptions[fmt.Sprintf("%T", authOption)]; ok {
 				continue
 			}
-			result = append(result, option)
+			result = append(result, authOption)
 		}
 
 	} else {

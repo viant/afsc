@@ -7,19 +7,19 @@ import (
 
 var errInvalidFormat = fmt.Errorf("invalid resource format: expected /projects/projectID/secrets/[secret]/versions/[version] ")
 
-//Resource represent secret resource
+// Resource represent secret resource
 type Resource struct {
 	ProjectID string
 	Secret    string
 	Version   string
 }
 
-//Name returns resource name
+// Name returns resource name
 func (r *Resource) Name() string {
 	return fmt.Sprintf("projects/%v/secrets/%v", r.ProjectID, r.Secret)
 }
 
-//VersionedName return versioned name
+// VersionedName return versioned name
 func (r *Resource) VersionedName() string {
 	version := r.Version
 	if version == "" {

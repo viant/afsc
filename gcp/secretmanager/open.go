@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/viant/afs/storage"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"io"
-	"io/ioutil"
 )
 
-//Open returns a reader closer for supplied resources
-func (s *storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
+// Open returns a reader closer for supplied resources
+func (s *Storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return nil, err
@@ -27,5 +27,5 @@ func (s *storager) Open(ctx context.Context, resourceID string, options ...stora
 		return nil, err
 	}
 	reader := bytes.NewReader(result.Payload.Data)
-	return ioutil.NopCloser(reader), nil
+	return io.NopCloser(reader), nil
 }

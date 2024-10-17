@@ -1,16 +1,17 @@
 package gs
 
 import (
+	"os"
+
 	"github.com/viant/afs"
 	"github.com/viant/toolbox"
-	"os"
 )
 
 var maxRetries = 4
 
 func init() {
-	if max := os.Getenv("GS_MAX_RETRIES"); max != "" {
-		maxRetries = toolbox.AsInt(max)
+	if maxR := os.Getenv("GS_MAX_RETRIES"); maxR != "" {
+		maxRetries = toolbox.AsInt(maxR)
 	}
 	afs.GetRegistry().Register(Scheme, Provider)
 }

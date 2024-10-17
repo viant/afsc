@@ -2,15 +2,16 @@ package secretmanager
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"os"
+
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
-	"os"
 )
 
-//List lists secret resources
-func (s *storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
+// List lists secret resources
+func (s *Storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
 	var result []os.FileInfo
 	resource, err := newResource(resourceID)
 	if err != nil {
@@ -19,12 +20,12 @@ func (s *storager) List(ctx context.Context, resourceID string, options ...stora
 	client := s.secretManager(resource.Region)
 	var nextToken *string
 	for {
-		output, err := client.ListSecretsWithContext(ctx, &secretsmanager.ListSecretsInput{
+		output, err := client.ListSecrets(ctx, &secretsmanager.ListSecretsInput{
 			NextToken: nextToken,
-			Filters: []*secretsmanager.Filter{
+			Filters: []types.Filter{
 				{
-					Key:    aws.String("name"),
-					Values: []*string{&resource.Secret},
+					Key:    "name",
+					Values: []string{resource.Secret},
 				},
 			},
 		})

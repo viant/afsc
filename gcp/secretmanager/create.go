@@ -2,18 +2,19 @@ package secretmanager
 
 import (
 	"context"
-	"github.com/viant/afs/storage"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"io"
 	"os"
+
+	"github.com/viant/afs/storage"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
-//Create create file or directory
-func (s *storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
+// Create create file or directory
+func (s *Storager) Create(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, isDir bool, options ...storage.Option) error {
 	return nil
 }
 
-func (s *storager) createSecret(ctx context.Context, resource *Resource) (*secretmanagerpb.Secret, error) {
+func (s *Storager) createSecret(ctx context.Context, resource *Resource) (*secretmanagerpb.Secret, error) {
 	request := &secretmanagerpb.CreateSecretRequest{
 		Parent:   "projects/" + resource.ProjectID,
 		SecretId: resource.Secret,

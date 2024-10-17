@@ -2,16 +2,16 @@ package ssm
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/viant/afs/storage"
-	"io/ioutil"
+	"io"
 	"strings"
 
-	"io"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/viant/afs/storage"
 )
 
-//Open returns a reader closer for supplied resources
-func (s *storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
+// Open returns a reader closer for supplied resources
+func (s *Storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return nil, err
@@ -25,12 +25,12 @@ func (s *storager) Open(ctx context.Context, resourceID string, options ...stora
 	if parameter != nil && parameter.Value != nil {
 		value = *parameter.Value
 	}
-	return ioutil.NopCloser(strings.NewReader(value)), nil
+	return io.NopCloser(strings.NewReader(value)), nil
 }
 
-func (s *storager) getParameter(ctx context.Context, client *ssm.SSM, resource *Resource) (*ssm.Parameter, error) {
+func (s *Storager) getParameter(ctx context.Context, client *ssm.Client, resource *Resource) (*types.Parameter, error) {
 	withDecryption := true
-	output, err := client.GetParameterWithContext(ctx,
+	output, err := client.GetParameter(ctx,
 		&ssm.GetParameterInput{
 			Name:           &resource.Name,
 			WithDecryption: &withDecryption,

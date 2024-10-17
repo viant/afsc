@@ -7,7 +7,7 @@ import (
 
 var errInvalidFormat = fmt.Errorf("invalid resource format: expected /[region]/secret/[secretURI]")
 
-//Resource represent secret resource
+// Resource represent secret resource
 type Resource struct {
 	Region string
 	Secret string

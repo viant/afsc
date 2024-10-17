@@ -2,29 +2,30 @@ package s3
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 )
 
-//AwsConfigProvider represents aws config provider
+// AwsConfigProvider represents aws config provider
 type AwsConfigProvider interface {
 	AwsConfig() (*aws.Config, error)
 }
 
-//AuthConfig represents an auth config
+// AuthConfig represents an auth config
 type AuthConfig struct {
 	Key       string    `json:",omitempty"`
 	Secret    string    `json:",omitempty"`
@@ -35,23 +36,25 @@ type AuthConfig struct {
 	RoleArn   string    `json:",omitempty"`
 }
 
-//AwsConfig returns aws config
+// AwsConfig returns aws config
 func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(os.Getenv("AWS_REGION")),
-		Credentials: credentials.NewStaticCredentials(c.Key, c.Secret, ""),
-	})
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(os.Getenv("AWS_REGION")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(c.Key, c.Secret, "")),
+	)
+
 	if err != nil {
 		log.Println("NewSession Error", err)
 		return nil, err
 	}
 
-	svc := sts.New(sess)
+	svc := sts.NewFromConfig(cfg)
 
 	if c.RoleArn != "" && c.Token == "" {
 		roleToAssumeArn := c.RoleArn
 		sessionName := os.Getenv("AWS_LAMBDA_FUNCTION_NAME") + "_session"
-		result, err := svc.AssumeRole(&sts.AssumeRoleInput{
+		result, err := svc.AssumeRole(context.Background(), &sts.AssumeRoleInput{
 			RoleArn:         &roleToAssumeArn,
 			RoleSessionName: &sessionName,
 		})
@@ -71,15 +74,20 @@ func (c *AuthConfig) AwsConfig() (*aws.Config, error) {
 		c.Token = ""
 	}
 
-	awsCredentials := credentials.NewStaticCredentials(c.Key, c.Secret, c.Token)
-	_, err = awsCredentials.Get()
+	credentialsCache := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(c.Key, c.Secret, c.Token))
+	_, err = credentialsCache.Retrieve(context.Background())
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid credentials")
 	}
-	return aws.NewConfig().WithRegion(c.Region).WithCredentials(awsCredentials), nil
+
+	cfg, err = config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(c.Region),
+		config.WithCredentialsProvider(credentialsCache),
+	)
+	return &cfg, nil
 }
 
-//NewAuthConfig returns new auth config from location
+// NewAuthConfig returns new auth config from location
 func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 	location := &option.Location{}
 	var JSONPayload = make([]byte, 0)
@@ -97,13 +105,13 @@ func NewAuthConfig(options ...storage.Option) (*AuthConfig, error) {
 			return nil, errors.Wrap(err, "failed to open auth config")
 		}
 		defer func() { _ = file.Close() }()
-		if JSONPayload, err = ioutil.ReadAll(file); err != nil {
+		if JSONPayload, err = io.ReadAll(file); err != nil {
 			return nil, err
 		}
 
 	}
-	config := &AuthConfig{}
-	err := json.NewDecoder(bytes.NewReader(JSONPayload)).Decode(config)
-	return config, err
+	authConfig := &AuthConfig{}
+	err := json.NewDecoder(bytes.NewReader(JSONPayload)).Decode(authConfig)
+	return authConfig, err
 
 }

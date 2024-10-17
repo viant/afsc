@@ -1,11 +1,12 @@
 package gs
 
 import (
-	"github.com/viant/afs/option"
 	"net/http"
+
+	"github.com/viant/afs/option"
 )
 
-//SetCustomKeyHeader set encryption headers
+// SetCustomKeyHeader set encryption headers
 func SetCustomKeyHeader(key *option.AES256Key, headers http.Header) error {
 	err := key.Init()
 	if err == nil {

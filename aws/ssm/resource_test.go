@@ -1,8 +1,9 @@
 package ssm
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewResource(t *testing.T) {

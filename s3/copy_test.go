@@ -3,14 +3,15 @@ package s3
 import (
 	"context"
 	"fmt"
+	"io"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/url"
-	"io/ioutil"
-	"strings"
-	"testing"
 )
 
 func TestStorager_Copy(t *testing.T) {
@@ -73,7 +74,7 @@ func TestStorager_Copy(t *testing.T) {
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
-			data, err := ioutil.ReadAll(reader)
+			data, err := io.ReadAll(reader)
 			assert.EqualValues(t, resource.Data, data, useCase.description+" "+resource.Name)
 
 		}

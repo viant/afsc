@@ -2,21 +2,22 @@ package s3
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
-	"github.com/viant/afs/file"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/pkg/errors"
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 )
 
-//List list directory or returns a file info
-func (s *storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
+// List list directory or returns a file info
+func (s *Storager) List(ctx context.Context, location string, options ...storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	matcher, page := option.GetListOptions(options)
 	var result = make([]os.FileInfo, 0)
@@ -31,7 +32,7 @@ func (s *storager) List(ctx context.Context, location string, options ...storage
 	return result, err
 }
 
-func (s *storager) addFolders(parent string, result *[]os.FileInfo, prefixes []*s3.CommonPrefix, page *option.Page, matcher option.Match) {
+func (s *Storager) addFolders(parent string, result *[]os.FileInfo, prefixes []types.CommonPrefix, page *option.Page, matcher option.Match) {
 	for i := range prefixes {
 		folder := strings.Trim(*prefixes[i].Prefix, "/")
 		_, name := path.Split(folder)
@@ -52,7 +53,7 @@ func (s *storager) addFolders(parent string, result *[]os.FileInfo, prefixes []*
 
 }
 
-func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.Object, page *option.Page, matcher option.Match) {
+func (s *Storager) addFiles(parent string, result *[]os.FileInfo, objects []types.Object, page *option.Page, matcher option.Match) {
 	for i := range objects {
 		_, name := path.Split(*objects[i].Key)
 		if name == "" {
@@ -73,55 +74,58 @@ func (s *storager) addFiles(parent string, result *[]os.FileInfo, objects []*s3.
 	}
 }
 
-func (s *storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
+func (s *Storager) list(ctx context.Context, parent string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	started := time.Now()
 	defer func() {
 		s.logF("s3:List %v %s\n", parent, time.Since(started))
 	}()
 
-	input := &s3.ListObjectsInput{
+	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(s.bucket),
 		Prefix:    aws.String(parent),
 		Delimiter: aws.String("/"),
 	}
 	var folders int
 	var files int
-	err := s.ListObjectsPagesWithContext(ctx, input, func(output *s3.ListObjectsOutput, lastPage bool) bool {
+	paginator := s3.NewListObjectsV2Paginator(s.Client, input)
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
+			break
+		}
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
 		assets := exactMatched(output, input)
 		s.addFiles(parent, result, assets, page, matcher)
 		folders = len(output.CommonPrefixes)
 		files = len(output.Contents)
-		return (!page.HasReachedLimit()) && !lastPage
-	})
+	}
 
 	if files == 1 && folders == 0 {
 		return nil
 	}
-	if err != nil {
-		if err == credentials.ErrNoValidProvidersFoundInChain {
-			s.initS3Client()
-		}
-		err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
-	}
 
-	input = &s3.ListObjectsInput{
+	input = &s3.ListObjectsV2Input{
 		Bucket:    aws.String(s.bucket),
 		Prefix:    aws.String(parent + "/"),
 		Delimiter: aws.String("/"),
 	}
-	err = s.ListObjectsPagesWithContext(ctx, input, func(output *s3.ListObjectsOutput, lastPage bool) bool {
+
+	paginator = s3.NewListObjectsV2Paginator(s.Client, input)
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
 		s.addFiles(parent, result, output.Contents, page, matcher)
-		return (!page.HasReachedLimit()) && !lastPage
+	}
 
-	})
-
-	return err
+	return nil
 }
 
-func exactMatched(output *s3.ListObjectsOutput, input *s3.ListObjectsInput) []*s3.Object {
-	var assets = []*s3.Object{}
+func exactMatched(output *s3.ListObjectsV2Output, input *s3.ListObjectsV2Input) []types.Object {
+	var assets []types.Object
 	if len(output.Contents) == 0 {
 		return assets
 	}

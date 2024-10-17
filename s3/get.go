@@ -3,30 +3,31 @@ package s3
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"os"
+	"path"
+	"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
-//Get returns an object for supplied location
-func (s *storager) get(ctx context.Context, location string, options []storage.Option) (os.FileInfo, error) {
+// Get returns an object for supplied location
+func (s *Storager) get(ctx context.Context, location string, options []storage.Option) (os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	_, name := path.Split(location)
 
-	object, err := s.HeadObject(&s3.HeadObjectInput{Bucket: &s.bucket,
+	object, err := s.HeadObject(context.Background(), &s3.HeadObjectInput{Bucket: &s.bucket,
 		Key: &location})
 
-	//object, err := s.GetObject(&s3.GetObjectInput{
+	// object, err := s.GetObject(&s3.GetObjectInput{
 	//	Bucket: &s.bucket,
 	//	Key:    &location,
-	//})
+	// })
 	if err != nil {
 		return nil, err
 	}
@@ -49,15 +50,15 @@ func (s *storager) get(ctx context.Context, location string, options []storage.O
 	return file.NewInfo(name, contentLength, file.DefaultFileOsMode, modified, false, object), nil
 }
 
-func (s *storager) assignMetadata(options []storage.Option, object *s3.GetObjectOutput) {
+func (s *Storager) assignMetadata(options []storage.Option, object *s3.GetObjectOutput) {
 	meta := &content.Meta{}
 	if _, ok := option.Assign(options, &meta); ok {
 		meta.Values = make(map[string]string)
 		if len(object.Metadata) > 0 {
 			for k, v := range object.Metadata {
 				value := ""
-				if v != nil {
-					value = *v
+				if v != "" {
+					value = v
 				}
 				meta.Values[k] = value
 			}
@@ -65,15 +66,15 @@ func (s *storager) assignMetadata(options []storage.Option, object *s3.GetObject
 	}
 }
 
-func (s *storager) assignMetadataWithHead(options []storage.Option, object *s3.HeadObjectOutput) {
+func (s *Storager) assignMetadataWithHead(options []storage.Option, object *s3.HeadObjectOutput) {
 	meta := &content.Meta{}
 	if _, ok := option.Assign(options, &meta); ok {
 		meta.Values = make(map[string]string)
 		if len(object.Metadata) > 0 {
 			for k, v := range object.Metadata {
 				value := ""
-				if v != nil {
-					value = *v
+				if v != "" {
+					value = v
 				}
 				meta.Values[k] = value
 			}
@@ -81,8 +82,8 @@ func (s *storager) assignMetadataWithHead(options []storage.Option, object *s3.H
 	}
 }
 
-//Get returns an object for supplied location
-func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+// Get returns an object for supplied location
+func (s *Storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	started := time.Now()
 	defer func() {
 		s.logF("s3:Get %v %s\n", location, time.Since(started))

@@ -3,22 +3,22 @@ package secretmanager
 import (
 	"context"
 	"encoding/base64"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/viant/afs/storage"
 	"io"
-	"io/ioutil"
 	"os"
 	"unicode"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/viant/afs/storage"
 )
 
-//Upload uploads
-func (s *storager) Upload(ctx context.Context, resourceID string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+// Upload uploads
+func (s *Storager) Upload(ctx context.Context, resourceID string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return err
 	}
-	data, _ := ioutil.ReadAll(reader)
+	data, _ := io.ReadAll(reader)
 	var secretBinary []byte
 	var secretString *string
 	if isASCII(string(data)) {
@@ -32,14 +32,14 @@ func (s *storager) Upload(ctx context.Context, resourceID string, mode os.FileMo
 	client := s.secretManager(resource.Region)
 	secret, err := s.getSecret(ctx, client, resource)
 	if isNotFound(err) {
-		_, err = client.CreateSecretWithContext(ctx, &secretsmanager.CreateSecretInput{
+		_, err = client.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
 			Name:         aws.String(resource.Secret),
 			SecretString: secretString,
 			SecretBinary: secretBinary,
 		})
 		return err
 	}
-	_, err = client.UpdateSecretWithContext(ctx, &secretsmanager.UpdateSecretInput{
+	_, err = client.UpdateSecret(ctx, &secretsmanager.UpdateSecretInput{
 		SecretId:     secret.ARN,
 		SecretString: secretString,
 		SecretBinary: secretBinary,

@@ -3,12 +3,14 @@ package s3
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"os"
 	"sort"
 	"strconv"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 const (
@@ -16,7 +18,7 @@ const (
 )
 
 type copyer struct {
-	*s3.S3
+	*s3.Client
 	partSize  int64
 	pos       int64 // current reader position
 	totalSize int64 // set to -1 if the size is not known
@@ -50,9 +52,9 @@ func (c *copyer) copy(ctx context.Context) error {
 		if finish >= int(c.totalSize) {
 			finish = int(c.totalSize) - 1
 		}
-		part := int64(i)
+		part := int32(i)
 
-		go func(start, finish int, part int64) {
+		go func(start, finish int, part int32) {
 			rateLimit <- true
 			defer func() {
 				wg.Done()
@@ -68,14 +70,14 @@ func (c *copyer) copy(ctx context.Context) error {
 				SSECustomerKey:       c.in.SSECustomerKey,
 				PartNumber:           &part,
 			}
-			output, e := c.S3.UploadPartCopyWithContext(ctx, params)
+			output, e := c.Client.UploadPartCopy(ctx, params)
 			if e != nil {
 				err = e
 
 			}
 			if e == nil {
 				mux.Lock()
-				parts = append(parts, &s3.CompletedPart{
+				parts = append(parts, types.CompletedPart{
 					ETag:       output.CopyPartResult.ETag,
 					PartNumber: &part,
 				})
@@ -97,9 +99,9 @@ func (c *copyer) complete(ctx context.Context, parts CompletedParts) error {
 		Bucket:          c.in.Bucket,
 		Key:             c.in.Key,
 		UploadId:        &c.uploadID,
-		MultipartUpload: &s3.CompletedMultipartUpload{Parts: parts},
+		MultipartUpload: &types.CompletedMultipartUpload{Parts: parts},
 	}
-	_, err := c.S3.CompleteMultipartUploadWithContext(ctx, params)
+	_, err := c.Client.CompleteMultipartUpload(ctx, params)
 	return err
 }
 
@@ -108,7 +110,7 @@ func (c *copyer) initCopy(ctx context.Context) error {
 		Bucket: c.in.Bucket,
 		Key:    c.in.Key,
 	}
-	multipartUploadOuput, err := c.S3.CreateMultipartUploadWithContext(ctx, multipartUploadInput)
+	multipartUploadOuput, err := c.Client.CreateMultipartUpload(ctx, multipartUploadInput)
 	if err != nil {
 		return err
 	}
@@ -116,9 +118,9 @@ func (c *copyer) initCopy(ctx context.Context) error {
 	return nil
 }
 
-func newCopyer(client *s3.S3, info os.FileInfo, partSize int64, input *s3.CopyObjectInput) *copyer {
+func newCopyer(client *s3.Client, info os.FileInfo, partSize int64, input *s3.CopyObjectInput) *copyer {
 	return &copyer{
-		S3:        client,
+		Client:    client,
 		in:        input,
 		partSize:  partSize,
 		totalSize: info.Size(),
@@ -126,7 +128,7 @@ func newCopyer(client *s3.S3, info os.FileInfo, partSize int64, input *s3.CopyOb
 	}
 }
 
-type CompletedParts []*s3.CompletedPart
+type CompletedParts []types.CompletedPart
 
 func (a CompletedParts) Len() int           { return len(a) }
 func (a CompletedParts) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

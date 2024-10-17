@@ -5,17 +5,16 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/viant/afs/storage"
-	"io/ioutil"
+	"io"
 	"strings"
 
-	"io"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/viant/afs/storage"
 )
 
-//Open returns a reader closer for supplied resources
-func (s *storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
+// Open returns a reader closer for supplied resources
+func (s *Storager) Open(ctx context.Context, resourceID string, options ...storage.Option) (io.ReadCloser, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return nil, err
@@ -46,11 +45,11 @@ func (s *storager) Open(ctx context.Context, resourceID string, options ...stora
 			reader = bytes.NewReader(decodedBinarySecretBytes[:size])
 		}
 	}
-	return ioutil.NopCloser(reader), nil
+	return io.NopCloser(reader), nil
 }
 
-func (s *storager) getSecret(ctx context.Context, client *secretsmanager.SecretsManager, resource *Resource) (*secretsmanager.GetSecretValueOutput, error) {
-	return client.GetSecretValueWithContext(ctx,
+func (s *Storager) getSecret(ctx context.Context, client *secretsmanager.Client, resource *Resource) (*secretsmanager.GetSecretValueOutput, error) {
+	return client.GetSecretValue(ctx,
 		&secretsmanager.GetSecretValueInput{
 			SecretId:     &resource.Secret,
 			VersionStage: aws.String("AWSCURRENT"),
