@@ -3,23 +3,21 @@ package ssm
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/viant/afs/storage"
 	"os"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/viant/afs/storage"
 )
 
-type storager struct {
-	sess   *session.Session
+type Storager struct {
 	region string
-	client *ssm.SSM
+	client *ssm.Client
 	mux    sync.Mutex
 }
 
-//Exists returns true if location exists
-func (s *storager) Exists(ctx context.Context, resourceID string, options ...storage.Option) (bool, error) {
+// Exists returns true if location exists
+func (s *Storager) Exists(ctx context.Context, resourceID string, options ...storage.Option) (bool, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return false, err
@@ -29,8 +27,8 @@ func (s *storager) Exists(ctx context.Context, resourceID string, options ...sto
 	return param != nil, nil
 }
 
-//Get returns a file info for supplied location
-func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+// Get returns a file info for supplied location
+func (s *Storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	list, err := s.List(ctx, location, options...)
 	if err != nil {
 		return nil, err
@@ -41,33 +39,29 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 	return list[0], nil
 }
 
-//Delete deletes locations
-func (s *storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
+// Delete deletes locations
+func (s *Storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
 	return fmt.Errorf("unsupported operation")
 }
 
-//Close closes storage
-func (s *storager) Close() error {
+// Close closes storage
+func (s *Storager) Close() error {
 	return nil
 }
 
-func (s *storager) systemManager(region string) *ssm.SSM {
+func (s *Storager) systemManager(region string) *ssm.Client {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	if s.region == "" || s.region != region {
 		s.region = region
-		s.client = ssm.New(s.sess, aws.NewConfig().WithRegion(region))
+		s.client = ssm.New(ssm.Options{Region: region})
 		return s.client
 	}
 	return s.client
 }
 
-//NewStorager create a new secreate manager storager
-func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
-	result := &storager{}
-	var err error
-	if result.sess, err = session.NewSession(); err != nil {
-		return nil, err
-	}
+// NewStorager create a new secret manager storager
+func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (*Storager, error) {
+	result := &Storager{}
 	return result, nil
 }

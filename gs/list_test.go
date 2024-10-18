@@ -3,9 +3,10 @@ package gs
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
-	"testing"
 )
 
 func TestStorager_List(t *testing.T) {

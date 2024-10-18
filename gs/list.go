@@ -2,26 +2,27 @@ package gs
 
 import (
 	"context"
-	"github.com/viant/afs/file"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
-	gstorage "google.golang.org/api/storage/v1"
 	"io"
 	"os"
 	"path"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/viant/afs/file"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
+	gstorage "google.golang.org/api/storage/v1"
 )
 
 var listCounter uint64
 
-//List list directory or returns a file info
+// List list directory or returns a file info
 func (s *storager) List(ctx context.Context, location string, options ...storage.Option) (files []os.FileInfo, err error) {
 	return s.listFiles(ctx, location, options)
 }
 
-//List list directory or returns a file info
+// List list directory or returns a file info
 func (s *storager) listFiles(ctx context.Context, location string, options []storage.Option) ([]os.FileInfo, error) {
 	location = strings.Trim(location, "/")
 	if location != "" {
@@ -33,7 +34,7 @@ func (s *storager) listFiles(ctx context.Context, location string, options []sto
 	return result, err
 }
 
-//List list directory, returns a file info
+// List list directory, returns a file info
 func (s *storager) list(ctx context.Context, location string, result *[]os.FileInfo, page *option.Page, matcher option.Match) error {
 	var err error
 	call := s.Objects.List(s.bucket)
@@ -110,7 +111,7 @@ func newFileInfo(object *gstorage.Object) (os.FileInfo, error) {
 	isDir := strings.HasSuffix(object.Name, "/")
 	if isDir {
 		mode = file.DefaultDirOsMode
-		object.Name = string(object.Name[:len(object.Name)-1])
+		object.Name = object.Name[:len(object.Name)-1]
 	}
 	_, name := path.Split(object.Name)
 	info := file.NewInfo(name, int64(object.Size), mode, modified, isDir, object)
@@ -174,7 +175,7 @@ func (s *storager) listObjects(ctx context.Context, location string, call *gstor
 	return files, folders, nil
 }
 
-//GetListCounter returns count of list operations
+// GetListCounter returns count of list operations
 func GetListCounter(reset bool) int {
 	result := atomic.LoadUint64(&listCounter)
 	if reset {

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/viant/afs"
 	_ "github.com/viant/afsc/gs"
-	"io/ioutil"
+	"io/io"
 	"log"
 )
 
@@ -30,7 +30,7 @@ func main() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -77,7 +77,7 @@ _Example:_
 
 	service := afs.New()
 	reader, err := service.DownloadWithURL(ctx, "gs://my-bucket/myfolder/asset.txt", jwtConfig)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ _Example:_
 
 	service := afs.New()
 	reader, err := service.DownloadWithURL(ctx, "gs://my-bucket/myfolder/asset.txt", gs.NewClientOptions(jsonAuth), gs.NewProject("myproject"))
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -128,7 +128,7 @@ _Example:_
   		log.Fatal(err)
   	}
   	reader, err := service.DownloadWithURL(ctx, "gs://mybucket/folder/secret1.txt", customKey)
-  	data, err := ioutil.ReadAll(reader)
+  	data, err := io.ReadAll(reader)
   	if err != nil {
   		log.Fatal(err)
   	}

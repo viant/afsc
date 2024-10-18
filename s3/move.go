@@ -3,17 +3,18 @@ package s3
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/pkg/errors"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 )
 
-func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
+func (s *Storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {
 	started := time.Now()
 	defer func() {
 		s.logF("s3:Move %v-> %v/%v %s\n", sourcePath, destBucket, destPath, time.Since(started))
@@ -50,10 +51,10 @@ func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath st
 		Bucket:     &destBucket,
 	}
 	if source.Size() >= maxCopySize {
-		copyer := newCopyer(s.S3, source, defaultPartSize, copyInput)
+		copyer := newCopyer(s.Client, source, defaultPartSize, copyInput)
 		err = copyer.copy(ctx)
 	} else {
-		_, err = s.S3.CopyObjectWithContext(ctx, copyInput)
+		_, err = s.Client.CopyObject(ctx, copyInput)
 	}
 	if err != nil {
 		err = errors.Wrapf(err, "failed to move: s3://%v/%v to s3://%v/%v", s.bucket, sourcePath, destBucket, destPath)

@@ -3,12 +3,13 @@ package gs
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
+
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
-	"path"
-	"strings"
 )
 
 const copySizeThreshold = 100 * 1024 * 1024

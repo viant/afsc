@@ -3,15 +3,16 @@ package secretmanager
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/storage"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"os"
-	"strings"
 )
 
-//List lists location assets
-func (s *storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
+// List lists location assets
+func (s *Storager) List(ctx context.Context, resourceID string, options ...storage.Option) ([]os.FileInfo, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func (s *storager) List(ctx context.Context, resourceID string, options ...stora
 	return nil, fmt.Errorf("invalid resource: %v", resourceID)
 }
 
-func (s *storager) listSecret(ctx context.Context, resource *Resource, info *[]os.FileInfo) error {
+func (s *Storager) listSecret(ctx context.Context, resource *Resource, info *[]os.FileInfo) error {
 	pageToken := ""
 	for {
 		request := &secretmanagerpb.ListSecretsRequest{
@@ -64,7 +65,7 @@ func (s *storager) listSecret(ctx context.Context, resource *Resource, info *[]o
 	return nil
 }
 
-func (s *storager) listSecretVersions(ctx context.Context, resource *Resource, info *[]os.FileInfo) error {
+func (s *Storager) listSecretVersions(ctx context.Context, resource *Resource, info *[]os.FileInfo) error {
 	pageToken := ""
 	for {
 		request := &secretmanagerpb.ListSecretVersionsRequest{

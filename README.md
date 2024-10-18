@@ -28,7 +28,7 @@ import (
 	"github.com/viant/afs"
 	_ "github.com/viant/afsc/gs"
 	_ "github.com/viant/afsc/s3"
-	"io/ioutil"
+	"io/io"
 	"log"
 )
 
@@ -49,7 +49,7 @@ func main() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -76,7 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 	reader, err := fs.DownloadWithURL(ctx, "s3://mybucket/folder/secret1.txt", customKey)
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,4 +137,3 @@ all compatible with Apache License, Version 2. Please see individual files for d
 ## Credits and Acknowledgements
 
 **Library Author:** Adrian Witas
-

@@ -3,11 +3,12 @@ package gs
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
 	"google.golang.org/api/storage/v1"
-	"io"
-	"net/http"
 )
 
 type reader struct {

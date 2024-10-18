@@ -3,12 +3,13 @@ package afsc
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
+
 	"github.com/viant/afs"
+
 	_ "github.com/viant/afsc/gs"
 	_ "github.com/viant/afsc/s3"
-
-	"io/ioutil"
-	"log"
 )
 
 func ExampleNew() {
@@ -28,7 +29,7 @@ func ExampleNew() {
 			log.Fatal(err)
 		}
 		defer reader.Close()
-		data, err := ioutil.ReadAll(reader)
+		data, err := io.ReadAll(reader)
 		if err != nil {
 			log.Fatal(err)
 		}

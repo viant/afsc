@@ -1,12 +1,13 @@
 package gs
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
+	"time"
+
+	"cloud.google.com/go/storage"
 	"github.com/viant/afs/option"
 	astorage "github.com/viant/afs/storage"
-	"time"
 )
 
 func (s *storager) presign(ctx context.Context, destination string, options []astorage.Option) error {

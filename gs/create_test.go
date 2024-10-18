@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/url"
-	"io"
-	"testing"
 )
 
 func TestStorager_Create(t *testing.T) {
@@ -44,13 +45,13 @@ func TestStorager_Create(t *testing.T) {
 	mgr := New(jwtConfig)
 	defer mgr.Delete(ctx, fmt.Sprintf("gs://%v/", TestBucket))
 	for _, useCase := range useCases {
-		for _, asset := range useCase.assets {
+		for _, uasset := range useCase.assets {
 			var reader io.Reader
-			if len(asset.Data) > 0 {
-				reader = bytes.NewReader(asset.Data)
+			if len(uasset.Data) > 0 {
+				reader = bytes.NewReader(uasset.Data)
 			}
 
-			err := mgr.Create(ctx, url.Join(useCase.URL, asset.Name), 0644, asset.Dir, reader)
+			err := mgr.Create(ctx, url.Join(useCase.URL, uasset.Name), 0644, uasset.Dir, reader)
 			assert.Nil(t, err, useCase.description)
 		}
 		actuals, err := asset.Load(mgr, useCase.URL)
@@ -58,10 +59,10 @@ func TestStorager_Create(t *testing.T) {
 			continue
 		}
 		assert.Nil(t, err, useCase.description)
-		for _, asset := range useCase.assets {
-			actual, ok := actuals[asset.Name]
-			assert.True(t, ok, useCase.description+" "+asset.Name)
-			assert.NotNil(t, actual, useCase.description+" "+asset.Name)
+		for _, uasset := range useCase.assets {
+			actual, ok := actuals[uasset.Name]
+			assert.True(t, ok, useCase.description+" "+uasset.Name)
+			assert.NotNil(t, actual, useCase.description+" "+uasset.Name)
 		}
 
 	}

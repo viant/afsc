@@ -3,11 +3,12 @@ package s3
 import (
 	"context"
 	"fmt"
+	"io"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/url"
-	"io/ioutil"
-	"testing"
 )
 
 func TestStorager_Download(t *testing.T) {
@@ -51,13 +52,13 @@ func TestStorager_Download(t *testing.T) {
 
 		}
 
-		for _, asset := range useCase.assets {
-			reader, err := mgr.OpenURL(ctx, url.Join(useCase.URL, asset.Name))
+		for _, uasset := range useCase.assets {
+			reader, err := mgr.OpenURL(ctx, url.Join(useCase.URL, uasset.Name))
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
-			data, err := ioutil.ReadAll(reader)
-			assert.EqualValues(t, asset.Data, data, useCase.description+" "+asset.Name)
+			data, err := io.ReadAll(reader)
+			assert.EqualValues(t, uasset.Data, data, useCase.description+" "+uasset.Name)
 
 		}
 

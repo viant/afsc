@@ -1,21 +1,22 @@
 package secretmanager
 
 import (
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
-	"github.com/viant/afsc/gs"
 	"golang.org/x/oauth2/jwt"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"strings"
 
-	"os"
+	"github.com/viant/afsc/gs"
 )
 
-type storager struct {
+type Storager struct {
 	options []storage.Option
 	client  *secretmanager.Client
 	service string
@@ -23,7 +24,7 @@ type storager struct {
 }
 
 // Exists returns true if location exists
-func (s *storager) Exists(ctx context.Context, resourceID string, options ...storage.Option) (bool, error) {
+func (s *Storager) Exists(ctx context.Context, resourceID string, options ...storage.Option) (bool, error) {
 	resource, err := newResource(resourceID)
 	if err != nil {
 		return false, err
@@ -33,7 +34,7 @@ func (s *storager) Exists(ctx context.Context, resourceID string, options ...sto
 }
 
 // Get returns a file info for supplied location
-func (s *storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+func (s *Storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
 	list, err := s.List(ctx, location, options...)
 	if err != nil {
 		return nil, err
@@ -45,17 +46,17 @@ func (s *storager) Get(ctx context.Context, location string, options ...storage.
 }
 
 // Delete deletes locations
-func (s *storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
+func (s *Storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
 	return fmt.Errorf("unsupported operation")
 }
 
 // Close closes storage
-func (s *storager) Close() error {
+func (s *Storager) Close() error {
 	return s.client.Close()
 }
 
 // NewStorager create a new secreate manager storager
-func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (*storager, error) {
+func NewStorager(ctx context.Context, baseURL string, options ...storage.Option) (*Storager, error) {
 	authority := strings.ToLower(url.Host(baseURL))
 	var gcpOptions gs.ClientOptions
 	option.Assign(options, &gcpOptions)
@@ -68,5 +69,5 @@ func NewStorager(ctx context.Context, baseURL string, options ...storage.Option)
 	if err != nil {
 		return nil, err
 	}
-	return &storager{service: authority, options: options, client: client}, nil
+	return &Storager{service: authority, options: options, client: client}, nil
 }

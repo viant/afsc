@@ -2,16 +2,18 @@ package gs
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"github.com/viant/afs/option"
-	"github.com/viant/afs/storage"
-	"github.com/viant/afsc/auth"
-	"golang.org/x/oauth2"
-	gstorage "google.golang.org/api/storage/v1"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
+	"golang.org/x/oauth2"
+	gstorage "google.golang.org/api/storage/v1"
+
+	"github.com/viant/afsc/auth"
 )
 
 type client struct {

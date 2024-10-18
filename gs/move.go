@@ -3,12 +3,13 @@ package gs
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
+
 	"github.com/viant/afs/file"
 	"github.com/viant/afs/option"
 	"github.com/viant/afs/storage"
 	gstorage "google.golang.org/api/storage/v1"
-	"path"
-	"strings"
 )
 
 func (s *storager) Move(ctx context.Context, sourcePath, destBucket, destPath string, options ...storage.Option) error {

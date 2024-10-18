@@ -1,16 +1,18 @@
 package secretmanager
 
 import (
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"errors"
+
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 func isNotFound(err error) bool {
-	if aerr, ok := err.(awserr.Error); ok {
-		switch aerr.Code() {
-		case secretsmanager.ErrCodeResourceNotFoundException:
+	if err != nil {
+		var rnf *types.ResourceNotFoundException
+		if errors.As(err, &rnf) {
 			return true
 		}
+		return false
 	}
 	return false
 }

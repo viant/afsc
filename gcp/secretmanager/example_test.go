@@ -3,11 +3,13 @@ package secretmanager_test
 import (
 	"context"
 	"fmt"
-	"github.com/viant/afs"
-	"github.com/viant/afs/file"
-	_ "github.com/viant/afsc/gcp"
 	"log"
 	"strings"
+
+	"github.com/viant/afs"
+	"github.com/viant/afs/file"
+
+	_ "github.com/viant/afsc/gcp"
 )
 
 func Example_DownloadWithURL() {

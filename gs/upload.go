@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/viant/afs/object"
 	"github.com/viant/afs/option"
@@ -11,11 +16,6 @@ import (
 	"github.com/viant/afs/storage"
 	"google.golang.org/api/googleapi"
 	gstorage "google.golang.org/api/storage/v1"
-	"io"
-	"io/ioutil"
-	"os"
-	"path"
-	"strings"
 )
 
 func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, md5Hash *option.Md5, content []byte) {
@@ -27,12 +27,12 @@ func (s *storager) updateChecksum(object *gstorage.Object, crcHash *option.Crc, 
 	}
 }
 
-//Upload uploads content
+// Upload uploads content
 func (s *storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) (err error) {
 	return s.upload(ctx, destination, mode, reader, options)
 }
 
-//Upload uploads content
+// Upload uploads content
 func (s *storager) upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options []storage.Option) error {
 	destination = strings.Trim(destination, "/")
 	gobject := &gstorage.Object{
@@ -47,14 +47,14 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 	meta := &content.Meta{}
 	option.Assign(options, &md5Hash, &crcHash, &key, &checksum, &newObject)
 	var err error
-	var content []byte
+	var contentBytes []byte
 	if !checksum.Skip {
-		content, err = ioutil.ReadAll(reader)
+		contentBytes, err = io.ReadAll(reader)
 		if err != nil {
 			return err
 		}
-		s.updateChecksum(gobject, crcHash, md5Hash, content)
-		reader = bytes.NewReader(content)
+		s.updateChecksum(gobject, crcHash, md5Hash, contentBytes)
+		reader = bytes.NewReader(contentBytes)
 	}
 	call := s.Objects.Insert(s.bucket, gobject)
 	call.Context(ctx)
@@ -82,7 +82,7 @@ func (s *storager) upload(ctx context.Context, destination string, mode os.FileM
 		call.Media(reader, mediaOpts...).Projection("full")
 	}
 
-	gobject, err = s.uploadWithRetires(ctx, call, content)
+	gobject, err = s.uploadWithRetires(ctx, call, contentBytes)
 	if isBucketNotFound(err) {
 		if createErr := s.createBucket(ctx); createErr != nil {
 			return err
@@ -134,7 +134,7 @@ func updateMetaContent(meta *content.Meta, gobject *gstorage.Object) {
 }
 
 func (s *storager) uploadWithRetires(ctx context.Context, call *gstorage.ObjectsInsertCall, data []byte) (object *gstorage.Object, err error) {
-	if len(data) == 0 { //no data - thus no retries once reader is exhausted
+	if len(data) == 0 { // no data - thus no retries once reader is exhausted
 		return call.Do()
 	}
 	err = runWithRetries(ctx, func() error {

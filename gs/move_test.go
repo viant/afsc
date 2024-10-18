@@ -3,12 +3,13 @@ package gs
 import (
 	"context"
 	"fmt"
+	"io"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/afs/asset"
 	"github.com/viant/afs/url"
-	"io/ioutil"
-	"strings"
-	"testing"
 )
 
 func TestStorager_Move(t *testing.T) {
@@ -52,15 +53,15 @@ func TestStorager_Move(t *testing.T) {
 		assert.Nil(t, err, useCase.description)
 		err := mgr.Move(ctx, url.Join(useCase.URL, useCase.source), url.Join(useCase.URL, useCase.dest))
 		assert.Nil(t, err)
-		for _, asset := range useCase.assets {
-			URL := url.Join(useCase.URL, asset.Name)
+		for _, uasset := range useCase.assets {
+			URL := url.Join(useCase.URL, uasset.Name)
 			URL = strings.Replace(URL, useCase.source, useCase.dest, 1)
 			reader, err := mgr.OpenURL(ctx, URL)
 			if !assert.Nil(t, err, useCase.description) {
 				continue
 			}
-			data, err := ioutil.ReadAll(reader)
-			assert.EqualValues(t, asset.Data, data, useCase.description+" "+asset.Name)
+			data, err := io.ReadAll(reader)
+			assert.EqualValues(t, uasset.Data, data, useCase.description+" "+uasset.Name)
 
 		}
 

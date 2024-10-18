@@ -3,12 +3,14 @@ package aws
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/viant/afs/base"
 	"github.com/viant/afs/storage"
 	"github.com/viant/afs/url"
+
 	"github.com/viant/afsc/aws/secretmanager"
 	"github.com/viant/afsc/aws/ssm"
-	"strings"
 )
 
 var errUnsupported = fmt.Errorf("unsupported operation")
@@ -22,12 +24,12 @@ type manager struct {
 	*base.Manager
 }
 
-//Copy moves data from source to dest
+// Copy moves data from source to dest
 func (m *manager) Copy(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	return errUnsupported
 }
 
-//Move moves data from source to dest
+// Move moves data from source to dest
 func (m *manager) Move(ctx context.Context, sourceURL, destURL string, options ...storage.Option) error {
 	return errUnsupported
 }
@@ -52,7 +54,7 @@ func newManager(options ...storage.Option) *manager {
 	return result
 }
 
-//New creates scp manager
+// New creates scp manager
 func New(options ...storage.Option) storage.Manager {
 	return newManager(options...)
 }

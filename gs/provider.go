@@ -2,14 +2,15 @@ package gs
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/viant/afs/storage"
 	"golang.org/x/oauth2/google"
 	goptions "google.golang.org/api/option"
 	htransport "google.golang.org/api/transport/http"
-	"net/http"
 )
 
-//Provider returns a google storage manager
+// Provider returns a google storage manager
 func Provider(options ...storage.Option) (storage.Manager, error) {
 	return New(options...), nil
 }
@@ -32,16 +33,16 @@ func getDefaultProject(ctx context.Context, scopes []string) (string, error) {
 	return credentials.ProjectID, nil
 }
 
-//SetOptions set global default options
+// SetOptions set global default options
 func SetOptions(options ...goptions.ClientOption) {
 	DefaultOptions = options
 }
 
-//DefaultOptions represents default client option
+// DefaultOptions represents default client option
 var DefaultOptions []goptions.ClientOption
 
-//DefaultHTTPClientProvider defaultHTTP client
+// DefaultHTTPClientProvider defaultHTTP client
 var DefaultHTTPClientProvider = getDefaultHTTPClient
 
-//DefaultProjectProvider default projectid provider
+// DefaultProjectProvider default projectid provider
 var DefaultProjectProvider = getDefaultProject
