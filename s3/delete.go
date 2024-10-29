@@ -11,9 +11,15 @@ import (
 
 // Delete removes an resource
 func (s *Storager) Delete(ctx context.Context, location string, options ...storage.Option) error {
+
+	// In SDK v2, DeleteObject does not handle leading slashes, so remove them here
+	deleteLocation := location
+	if len(deleteLocation) > 0 && deleteLocation[0] == '/' {
+		deleteLocation = deleteLocation[1:]
+	}
 	_, err := s.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &s.bucket,
-		Key:    &location,
+		Key:    &deleteLocation,
 	})
 	if isNotFound(err) {
 		objectKind := &option.ObjectKind{}
