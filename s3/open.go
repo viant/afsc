@@ -19,6 +19,13 @@ import (
 
 // Open return content reader and hash values if md5 or crc option is supplied or error
 func (s *Storager) Open(ctx context.Context, location string, options ...storage.Option) (io.ReadCloser, error) {
+
+	// In SDK v2, multiple functions do not handle leading slashes, so remove them here
+	parsedLocation := location
+	if len(parsedLocation) > 0 && parsedLocation[0] == '/' {
+		parsedLocation = parsedLocation[1:]
+	}
+
 	started := time.Now()
 	defer func() {
 		s.logF("s3:Open %v %s\n", location, time.Since(started))
@@ -30,7 +37,7 @@ func (s *Storager) Open(ctx context.Context, location string, options ...storage
 	option.Assign(options, &key, &stream)
 	input := &s3.GetObjectInput{
 		Bucket: &s.bucket,
-		Key:    &location,
+		Key:    &parsedLocation,
 	}
 
 	if len(key.Key) > 0 {
