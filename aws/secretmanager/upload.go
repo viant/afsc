@@ -29,7 +29,11 @@ func (s *Storager) Upload(ctx context.Context, resourceID string, mode os.FileMo
 		base64.StdEncoding.Encode(secretBinary, data)
 	}
 
-	client := s.secretManager(resource.Region)
+	client, err := s.secretManager(ctx, resource.Region)
+	if err != nil {
+		return err
+	}
+
 	secret, err := s.getSecret(ctx, client, resource)
 	if isNotFound(err) {
 		_, err = client.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
@@ -39,6 +43,11 @@ func (s *Storager) Upload(ctx context.Context, resourceID string, mode os.FileMo
 		})
 		return err
 	}
+
+	if err != nil && secret == nil {
+		return err
+	}
+
 	_, err = client.UpdateSecret(ctx, &secretsmanager.UpdateSecretInput{
 		SecretId:     secret.ARN,
 		SecretString: secretString,

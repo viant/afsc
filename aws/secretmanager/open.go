@@ -19,7 +19,11 @@ func (s *Storager) Open(ctx context.Context, resourceID string, options ...stora
 	if err != nil {
 		return nil, err
 	}
-	client := s.secretManager(resource.Region)
+	client, err := s.secretManager(ctx, resource.Region)
+	if err != nil {
+		return nil, err
+	}
+
 	output, err := s.getSecret(ctx, client, resource)
 	if err != nil {
 		return nil, err
