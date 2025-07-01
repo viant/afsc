@@ -5,4 +5,5 @@ const (
 	contentMD5MetaKey         = "ContentMD5"
 	noSuchKeyMessage          = "NoSuchKey"
 	doesNotExistsMessage      = "does not exist"
+	notFoundMessage           = "NotFound"
 )

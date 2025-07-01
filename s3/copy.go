@@ -36,7 +36,7 @@ func (s *Storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 		}
 		for i := 1; i < len(infoList); i++ {
 			name := infoList[i].Name()
-			if err = s.Move(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
+			if err = s.Copy(ctx, path.Join(sourcePath, name), destBucket, path.Join(destPath, name)); err != nil {
 				return err
 			}
 		}
