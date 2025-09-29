@@ -3,6 +3,7 @@ package secretmanager
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"os"
 	"sync"
 
@@ -23,7 +24,11 @@ func (s *Storager) Exists(ctx context.Context, resourceID string, options ...sto
 	if err != nil {
 		return false, err
 	}
-	client := s.secretManager(resource.Region)
+	client, err := s.secretManager(ctx, resource.Region)
+	if err != nil {
+		return false, err
+	}
+
 	_, err = client.GetSecretValue(ctx,
 		&secretsmanager.GetSecretValueInput{
 			SecretId:     &resource.Secret,
@@ -54,15 +59,20 @@ func (s *Storager) Close() error {
 	return nil
 }
 
-func (s *Storager) secretManager(region string) *secretsmanager.Client {
+func (s *Storager) secretManager(ctx context.Context, region string) (*secretsmanager.Client, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	if s.region == "" || s.region != region {
 		s.region = region
-		s.client = secretsmanager.New(secretsmanager.Options{Region: region})
-		return s.client
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load AWS config: %w", err)
+		}
+
+		s.client = secretsmanager.NewFromConfig(cfg)
+		return s.client, nil
 	}
-	return s.client
+	return s.client, nil
 }
 
 // NewStorager create a new secret manager storager

@@ -17,7 +17,11 @@ func (s *Storager) List(ctx context.Context, resourceID string, options ...stora
 	if err != nil {
 		return nil, err
 	}
-	client := s.secretManager(resource.Region)
+	client, err := s.secretManager(ctx, resource.Region)
+	if err != nil {
+		return nil, err
+	}
+
 	var nextToken *string
 	for {
 		output, err := client.ListSecrets(ctx, &secretsmanager.ListSecretsInput{
