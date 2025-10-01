@@ -18,7 +18,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/viant/afs v1.25.1
 	github.com/viant/toolbox v0.37.0
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.201.0
 	google.golang.org/genproto v0.0.0-20241015192408-796eee8c2d53
 )
