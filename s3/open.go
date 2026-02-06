@@ -1,14 +1,11 @@
 package s3
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
-	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"github.com/viant/afs/base"
@@ -31,10 +28,10 @@ func (s *Storager) Open(ctx context.Context, location string, options ...storage
 		s.logF("s3:Open %v %s\n", location, time.Since(started))
 	}()
 
-	var err error
 	stream := &option.Stream{}
 	key := &option.AES256Key{}
 	option.Assign(options, &key, &stream)
+
 	input := &s3.GetObjectInput{
 		Bucket: &s.bucket,
 		Key:    &parsedLocation,
@@ -48,28 +45,34 @@ func (s *Storager) Open(ctx context.Context, location string, options ...storage
 		input.SSECustomerKeyMD5 = &key.Base64KeyMd5Hash
 	}
 
-	downloader := s3manager.NewDownloader(s3.NewFromConfig(*s.config))
-	if stream.PartSize > 0 {
-		objects, err := s.List(ctx, location, key)
-		if err != nil {
-			return nil, err
-		}
-		if len(objects) == 0 {
-			return nil, fmt.Errorf("s3://%v/%v no found", s.bucket, location)
-		}
-		downloader.PartSize = int64(stream.PartSize)
-		stream.Size = int(objects[0].Size())
-		readSeeker := NewReadSeeker(ctx, input, downloader, stream.PartSize, stream.Size)
-		reader := base.NewStreamReader(stream, readSeeker)
-		return reader, nil
+	objects, err := s.List(ctx, parsedLocation, key)
+	if err != nil {
+		return nil, err
+	}
+	if len(objects) == 0 {
+		return nil, fmt.Errorf("s3://%v/%v no found", s.bucket, parsedLocation)
 	}
 
-	writer := NewWriter(32 * 1024)
-	location = strings.Trim(location, "/")
-	_, err = downloader.Download(ctx, writer, input)
-	data := writer.Bytes()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to download: s3://%v/%v", s.bucket, location)
+	client := s3.NewFromConfig(*s.config)
+
+	if len(key.Key) > 0 {
+		stringKey := string(key.Key)
+		algorithm := customEncryptionAlgorithm
+		input.SSECustomerAlgorithm = &algorithm
+		input.SSECustomerKey = &stringKey
+		input.SSECustomerKeyMD5 = &key.Base64KeyMd5Hash
 	}
-	return io.NopCloser(bytes.NewReader(data)), nil
+
+	if stream.PartSize > 0 {
+		stream.Size = int(objects[0].Size())
+		readSeeker := NewReadSeeker(ctx, input, client, stream.PartSize, stream.Size)
+		streamReader := base.NewStreamReader(stream, readSeeker)
+		return streamReader, nil
+	}
+
+	output, getErr := client.GetObject(ctx, input)
+	if getErr != nil {
+		return nil, errors.Wrapf(getErr, "failed to get object: s3://%v/%v", s.bucket, parsedLocation)
+	}
+	return output.Body, nil
 }
