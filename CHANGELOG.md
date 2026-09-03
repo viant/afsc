@@ -1,3 +1,6 @@
+## Aug 24 2026
+* Added 1Password secret store (`op://`) via the op CLI
+
 ## May 21 2022 1.8.0
 * Added presign option support in gs
 

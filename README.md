@@ -120,6 +120,7 @@ func main() {
 - [GCP Google Secret Manager](gcp/secretmanager)
 - [AWS - Secret Manager](aws/secretmanager)
 - [AWS - System Manager - Parameter](aws/ssm)
+- [1Password](op)
 
 ## GoCover
 
