@@ -118,6 +118,9 @@ func (c *copyer) initCopy(ctx context.Context) error {
 	return nil
 }
 
+// newCopyer expects input.CopySource to already be URI-encoded according to
+// Amazon S3 CopySource rules. It forwards the value unchanged to each
+// UploadPartCopy request and must not encode it again.
 func newCopyer(client *s3.Client, info os.FileInfo, partSize int64, input *s3.CopyObjectInput) *copyer {
 	return &copyer{
 		Client:    client,

@@ -49,6 +49,32 @@ func TestStorager_Copy(t *testing.T) {
 				asset.NewFile("copy002/src/folder1/asset2.txt", []byte("test is test 3"), 0655),
 			},
 		},
+		{
+			description: "copy file with plus and spaces",
+			URL:         fmt.Sprintf("s3://%v/", TestBucket),
+			source:      "copy003/src/Donor+Sustainer list.csv",
+			dest:        "copy003/dst/Donor+Sustainer list.csv",
+			assets: []*asset.Resource{
+				asset.NewFile(
+					"copy003/src/Donor+Sustainer list.csv",
+					[]byte("plus and spaces"),
+					0655,
+				),
+			},
+		},
+		{
+			description: "copy file with literal percent sequence",
+			URL:         fmt.Sprintf("s3://%v/", TestBucket),
+			source:      "copy004/src/literal%20test.csv",
+			dest:        "copy004/dst/literal%20test.csv",
+			assets: []*asset.Resource{
+				asset.NewFile(
+					"copy004/src/literal%20test.csv",
+					[]byte("literal percent sequence"),
+					0655,
+				),
+			},
+		},
 	}
 	fs := afs.New()
 	mgr := newManager(authConfig)
