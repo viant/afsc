@@ -48,7 +48,7 @@ func (s *Storager) Copy(ctx context.Context, sourcePath, destBucket, destPath st
 	}
 
 	copyInput := &s3.CopyObjectInput{
-		CopySource: aws.String(s.bucket + "/" + sourcePath),
+		CopySource: aws.String(encodeCopySource(s.bucket, sourcePath)),
 		Key:        &destPath,
 		Bucket:     &destBucket,
 	}

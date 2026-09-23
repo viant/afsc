@@ -47,6 +47,32 @@ func TestStorager_Move(t *testing.T) {
 				asset.NewFile("move002/src/folder1/asset2.txt", []byte("test is test 3"), 0655),
 			},
 		},
+		{
+			description: "move file with plus and spaces",
+			URL:         fmt.Sprintf("s3://%v/", TestBucket),
+			source:      "move003/src/Donor+Sustainer list.csv",
+			dest:        "move003/dst/Donor+Sustainer list.csv",
+			assets: []*asset.Resource{
+				asset.NewFile(
+					"move003/src/Donor+Sustainer list.csv",
+					[]byte("plus and spaces"),
+					0655,
+				),
+			},
+		},
+		{
+			description: "move file with literal percent sequence",
+			URL:         fmt.Sprintf("s3://%v/", TestBucket),
+			source:      "move004/src/literal%20test.csv",
+			dest:        "move004/dst/literal%20test.csv",
+			assets: []*asset.Resource{
+				asset.NewFile(
+					"move004/src/literal%20test.csv",
+					[]byte("literal percent sequence"),
+					0655,
+				),
+			},
+		},
 	}
 	mgr := newManager(authConfig)
 	defer func() {
