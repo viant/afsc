@@ -15,7 +15,7 @@ func (s *Storager) Exists(ctx context.Context, location string, options ...stora
 		err = nil
 	}
 	if object == nil {
-		return false, nil
+		return false, err
 	}
 	name := location
 	if strings.Index(location, "/") != -1 {

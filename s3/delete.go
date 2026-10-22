@@ -21,6 +21,9 @@ func (s *Storager) Delete(ctx context.Context, location string, options ...stora
 		Bucket: &s.bucket,
 		Key:    &deleteLocation,
 	})
+	if err != nil && !isNotFound(err) {
+		return err
+	}
 	if isNotFound(err) {
 		objectKind := &option.ObjectKind{}
 		if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {

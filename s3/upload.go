@@ -20,6 +20,9 @@ import (
 
 // Upload uploads content
 func (s *Storager) Upload(ctx context.Context, destination string, mode os.FileMode, reader io.Reader, options ...storage.Option) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	destination = strings.Trim(destination, "/")
 	err := s.upload(ctx, destination, mode, reader, options)
 	if err != nil {
@@ -149,6 +152,9 @@ func (s *Storager) upload(ctx context.Context, destination string, mode os.FileM
 			case content.Type:
 				input.ContentType = &value
 				continue
+			case "Content-Disposition":
+				input.ContentDisposition = &value
+				continue
 			case content.Encoding:
 				input.ContentEncoding = &value
 				continue
@@ -159,7 +165,7 @@ func (s *Storager) upload(ctx context.Context, destination string, mode os.FileM
 			input.Metadata[k] = value
 		}
 	}
-	_, err := uploader.UploadObject(context.Background(), input)
+	_, err := uploader.UploadObject(ctx, input)
 	if err != nil && isRegionRedirect(err) && s.adjustRegionIfNeeded(ctx) {
 		if seeker, ok := reader.(io.Seeker); ok {
 			if _, seekErr := seeker.Seek(0, io.SeekStart); seekErr == nil {
@@ -191,6 +197,9 @@ func updateMetaContent(meta *content.Meta, input *s3.PutObjectInput) {
 			switch k {
 			case content.Type:
 				input.ContentType = &value
+				continue
+			case "Content-Disposition":
+				input.ContentDisposition = &value
 				continue
 			case content.Encoding:
 				input.ContentEncoding = &value

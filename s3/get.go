@@ -21,7 +21,7 @@ func (s *Storager) get(ctx context.Context, location string, options []storage.O
 	location = strings.Trim(location, "/")
 	_, name := path.Split(location)
 
-	object, err := s.HeadObject(context.Background(), &s3.HeadObjectInput{Bucket: &s.bucket,
+	object, err := s.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &s.bucket,
 		Key: &location})
 
 	// object, err := s.GetObject(&s3.GetObjectInput{
@@ -84,6 +84,9 @@ func (s *Storager) assignMetadataWithHead(options []storage.Option, object *s3.H
 
 // Get returns an object for supplied location
 func (s *Storager) Get(ctx context.Context, location string, options ...storage.Option) (os.FileInfo, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	started := time.Now()
 	defer func() {
 		s.logF("s3:Get %v %s\n", location, time.Since(started))
