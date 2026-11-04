@@ -16,9 +16,15 @@ func (s *Storager) presign(ctx context.Context, destination string, options []st
 	if _, ok := option.Assign(options, &preSign); ok {
 		settings := &PresignOptions{}
 		option.Assign(options, &settings)
-		expires := 15 * time.Minute
+		expires := preSign.TimeToLive
+		if expires == 0 {
+			expires = 15 * time.Minute
+		}
 		if settings.TimeToLive != 0 {
 			expires = settings.TimeToLive
+		}
+		if expires < time.Second || expires > 7*24*time.Hour {
+			return errors.Errorf("failed to presign url, s3://%v/%v: expiry must be between 1 second and 7 days", s.bucket, destination)
 		}
 		signed, err := s.presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 			Bucket: aws.String(s.bucket),

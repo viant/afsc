@@ -17,15 +17,20 @@ import (
 func TestStorager_PresignExpiryUnit(t *testing.T) {
 	testCases := []struct {
 		name      string
-		legacyTTL time.Duration
+		sharedTTL time.Duration
 		settings  *PresignOptions
 		expires   string
 	}{
 		{name: "default expiry", expires: "900"},
 		{name: "zero override keeps default", settings: &PresignOptions{}, expires: "900"},
 		{name: "custom expiry", settings: &PresignOptions{TimeToLive: time.Minute}, expires: "60"},
-		{name: "legacy TTL remains ignored", legacyTTL: 5 * time.Second, expires: "900"},
-		{name: "override with legacy TTL", legacyTTL: 5 * time.Second, settings: &PresignOptions{TimeToLive: time.Minute}, expires: "60"},
+		{name: "shared TTL honored", sharedTTL: 5 * time.Minute, expires: "300"},
+		{name: "zero override keeps shared TTL", sharedTTL: 5 * time.Minute, settings: &PresignOptions{}, expires: "300"},
+		{name: "override with shared TTL", sharedTTL: 5 * time.Minute, settings: &PresignOptions{TimeToLive: time.Minute}, expires: "60"},
+		{name: "shared minimum expiry", sharedTTL: time.Second, expires: "1"},
+		{name: "shared maximum expiry", sharedTTL: 7 * 24 * time.Hour, expires: "604800"},
+		{name: "override minimum expiry", settings: &PresignOptions{TimeToLive: time.Second}, expires: "1"},
+		{name: "override maximum expiry", settings: &PresignOptions{TimeToLive: 7 * 24 * time.Hour}, expires: "604800"},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -34,7 +39,7 @@ func TestStorager_PresignExpiryUnit(t *testing.T) {
 				requests++
 				return nil, fmt.Errorf("unexpected HTTP request during presigning")
 			})
-			preSign := &option.PreSign{TimeToLive: testCase.legacyTTL}
+			preSign := &option.PreSign{TimeToLive: testCase.sharedTTL}
 			options := []storage.Option{preSign}
 			if testCase.settings != nil {
 				options = append(options, testCase.settings)
@@ -64,18 +69,37 @@ func TestStorager_PresignWithoutOutputOptionUnit(t *testing.T) {
 }
 
 func TestStorager_PresignErrorUnit(t *testing.T) {
-	requests := 0
-	storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
-		requests++
-		return nil, fmt.Errorf("unexpected HTTP request during presigning")
-	})
-	preSign := &option.PreSign{}
-	err := storager.presign(context.Background(), "report.csv", []storage.Option{
-		preSign, &PresignOptions{TimeToLive: -time.Second},
-	})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to presign url, s3://"+s3UnitBucket+"/report.csv")
-	assert.Empty(t, preSign.URL)
-	assert.Empty(t, preSign.Header)
-	assert.Equal(t, 0, requests)
+	testCases := []struct {
+		name      string
+		sharedTTL time.Duration
+		settings  *PresignOptions
+	}{
+		{name: "negative shared expiry", sharedTTL: -time.Second},
+		{name: "shared expiry below minimum", sharedTTL: time.Second - time.Nanosecond},
+		{name: "shared expiry above maximum", sharedTTL: 7*24*time.Hour + time.Nanosecond},
+		{name: "negative override expiry", settings: &PresignOptions{TimeToLive: -time.Second}},
+		{name: "override expiry below minimum", settings: &PresignOptions{TimeToLive: time.Second - time.Nanosecond}},
+		{name: "override expiry above maximum", settings: &PresignOptions{TimeToLive: 7*24*time.Hour + time.Nanosecond}},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			requests := 0
+			storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
+				requests++
+				return nil, fmt.Errorf("unexpected HTTP request during presigning")
+			})
+			preSign := &option.PreSign{TimeToLive: testCase.sharedTTL}
+			options := []storage.Option{preSign}
+			if testCase.settings != nil {
+				options = append(options, testCase.settings)
+			}
+			err := storager.presign(context.Background(), "report.csv", options)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "failed to presign url, s3://"+s3UnitBucket+"/report.csv")
+			assert.Contains(t, err.Error(), "expiry must be between 1 second and 7 days")
+			assert.Empty(t, preSign.URL)
+			assert.Empty(t, preSign.Header)
+			assert.Equal(t, 0, requests)
+		})
+	}
 }

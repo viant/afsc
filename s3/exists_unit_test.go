@@ -48,6 +48,29 @@ func TestStorager_ExistsUnit(t *testing.T) {
 	}
 }
 
+func TestStorager_ExistsPreservesFirstListErrorUnit(t *testing.T) {
+	listRequests := 0
+	storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
+		if request.Method == http.MethodHead {
+			return s3UnitResponse(http.StatusNotFound, ""), nil
+		}
+		assert.Equal(t, http.MethodGet, request.Method)
+		listRequests++
+		if listRequests == 1 {
+			return s3UnitResponse(http.StatusForbidden, `<Error><Code>AccessDenied</Code><Message>Denied</Message></Error>`), nil
+		}
+		// A successful fallback must not hide the first listing failure.
+		return s3UnitResponse(http.StatusOK, s3UnitEmptyList), nil
+	})
+
+	exists, err := storager.Exists(context.Background(), "folder/report.csv")
+	assert.False(t, exists)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "AccessDenied")
+	assert.Contains(t, err.Error(), "failed to list: s3://"+s3UnitBucket+"/folder/report.csv")
+	assert.Equal(t, 1, listRequests)
+}
+
 func TestStorager_ExistsTransportFailureUnit(t *testing.T) {
 	transportErr := errors.New("unit transport failure")
 	storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
