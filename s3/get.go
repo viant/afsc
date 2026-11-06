@@ -101,6 +101,8 @@ func (s *Storager) Get(ctx context.Context, location string, options ...storage.
 		if _, ok := option.Assign(options, &objectKind); ok && objectKind.File {
 			return nil, err
 		}
+	} else {
+		return nil, err
 	}
 	options = append(options, option.NewPage(0, 1))
 	objects, err := s.List(ctx, location, options...)

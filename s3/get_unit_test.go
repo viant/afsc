@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/viant/afs/option"
+	"github.com/viant/afs/storage"
 )
 
 type s3UnitContextKey struct{}
@@ -71,4 +72,44 @@ func TestStorager_GetMissingFileUnit(t *testing.T) {
 	assert.Nil(t, info)
 	assert.Empty(t, preSign.URL)
 	assert.Equal(t, []string{http.MethodHead}, methods)
+}
+
+func TestStorager_GetInvalidPresignExpiryUnit(t *testing.T) {
+	testCases := []struct {
+		name      string
+		sharedTTL time.Duration
+		settings  *PresignOptions
+	}{
+		{name: "negative shared expiry", sharedTTL: -time.Second},
+		{name: "subsecond shared expiry", sharedTTL: 500 * time.Millisecond},
+		{name: "shared expiry above maximum", sharedTTL: 8 * 24 * time.Hour},
+		{name: "negative override expiry", settings: &PresignOptions{TimeToLive: -time.Second}},
+		{name: "subsecond override expiry", settings: &PresignOptions{TimeToLive: 500 * time.Millisecond}},
+		{name: "override expiry above maximum", settings: &PresignOptions{TimeToLive: 8 * 24 * time.Hour}},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var methods []string
+			storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
+				methods = append(methods, request.Method)
+				if request.Method == http.MethodHead {
+					return s3UnitResponse(http.StatusOK, ""), nil
+				}
+				// A successful listing of the existing file must not hide the presign error.
+				return s3UnitResponse(http.StatusOK, `<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><IsTruncated>false</IsTruncated><Contents><Key>folder/report.csv</Key><LastModified>2026-11-06T00:00:00Z</LastModified><Size>4</Size></Contents></ListBucketResult>`), nil
+			})
+			preSign := &option.PreSign{TimeToLive: testCase.sharedTTL}
+			options := []storage.Option{preSign}
+			if testCase.settings != nil {
+				options = append(options, testCase.settings)
+			}
+			info, err := storager.Get(context.Background(), "folder/report.csv", options...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "expiry must be between 1 second and 7 days")
+			assert.Nil(t, info)
+			assert.Empty(t, preSign.URL)
+			assert.Empty(t, preSign.Header)
+			assert.Equal(t, []string{http.MethodHead}, methods)
+		})
+	}
 }

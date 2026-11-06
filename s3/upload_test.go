@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,53 @@ import (
 	"github.com/viant/afs/option/content"
 	"github.com/viant/afs/storage"
 )
+
+func TestStorager_UploadInvalidPresignExpiryUnit(t *testing.T) {
+	testCases := []struct {
+		name      string
+		sharedTTL time.Duration
+		settings  *PresignOptions
+	}{
+		{name: "negative shared expiry", sharedTTL: -time.Second},
+		{name: "subsecond shared expiry", sharedTTL: 500 * time.Millisecond},
+		{name: "shared expiry above maximum", sharedTTL: 8 * 24 * time.Hour},
+		{name: "negative override expiry", settings: &PresignOptions{TimeToLive: -time.Second}},
+		{name: "subsecond override expiry", settings: &PresignOptions{TimeToLive: 500 * time.Millisecond}},
+		{name: "override expiry above maximum", settings: &PresignOptions{TimeToLive: 8 * 24 * time.Hour}},
+	}
+	for _, testCase := range testCases {
+		for _, streaming := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/streaming=%t", testCase.name, streaming), func(t *testing.T) {
+				requests := 0
+				storager := newS3UnitStorager(func(request *http.Request) (*http.Response, error) {
+					requests++
+					if _, err := io.Copy(io.Discard, request.Body); err != nil {
+						return nil, err
+					}
+					response := s3UnitResponse(http.StatusOK, "")
+					response.Header.Set("ETag", `"unit-etag"`)
+					return response, nil
+				})
+				preSign := &option.PreSign{TimeToLive: testCase.sharedTTL}
+				options := []storage.Option{preSign}
+				if testCase.settings != nil {
+					options = append(options, testCase.settings)
+				}
+				if streaming {
+					options = append(options, option.NewSkipChecksum(true), option.NewStream(5*1024*1024, 0))
+				}
+				reader := strings.NewReader("3\n8\n")
+				err := storager.Upload(context.Background(), "report.csv", 0644, reader, options...)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "expiry must be between 1 second and 7 days")
+				assert.Equal(t, 0, requests)
+				assert.Equal(t, 4, reader.Len())
+				assert.Empty(t, preSign.URL)
+				assert.Empty(t, preSign.Header)
+			})
+		}
+	}
+}
 
 func TestStorager_UploadContentDispositionUnit(t *testing.T) {
 	for _, streaming := range []bool{false, true} {

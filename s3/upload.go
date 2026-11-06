@@ -24,6 +24,9 @@ func (s *Storager) Upload(ctx context.Context, destination string, mode os.FileM
 		ctx = context.Background()
 	}
 	destination = strings.Trim(destination, "/")
+	if _, err := s.presignExpiry(destination, options); err != nil {
+		return err
+	}
 	err := s.upload(ctx, destination, mode, reader, options)
 	if err != nil {
 		return err
