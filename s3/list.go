@@ -91,8 +91,7 @@ func (s *Storager) list(ctx context.Context, parent string, result *[]os.FileInf
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
-			break
+			return errors.Wrapf(err, "failed to list: s3://%v/%v", s.bucket, parent)
 		}
 		s.addFolders(parent, result, output.CommonPrefixes, page, matcher)
 		assets := exactMatched(output, input)
